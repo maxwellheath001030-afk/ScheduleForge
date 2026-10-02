@@ -123,12 +123,22 @@ def resolve_live_term(semester):
             except Exception as e:
                 diagnostics.append({"endpoint":base,"error":str(e)})
     uniq=list({(x["code"],x["label"]):x for x in terms}.values())
-    words=semester.lower().split()
-matches=[
-    x for x in uniq
-    if all(w in x["label"].lower() for w in words)
-    and "non-credit" not in x["label"].lower()
-]
+   m = re.match(r"^(Spring|Summer|Fall)\s+(\d{4})$", semester.strip(), re.I)
+
+if m:
+    season = m.group(1).lower()
+    year = m.group(2)
+
+    matches = [
+        x for x in uniq
+        if re.search(
+            rf"^{re.escape(year)}\s+{re.escape(season)}(?:\s+\(View Only\))?$",
+            x["label"].strip(),
+            re.I
+        )
+    ]
+else:
+    matches = []
     if len(matches)==1:
         return {"verified":True,**matches[0],"diagnostics":diagnostics}
     return {"verified":False,"matches":matches,"termsSeen":uniq,"diagnostics":diagnostics}
