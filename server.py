@@ -123,32 +123,24 @@ def resolve_live_term(semester):
             except Exception as e:
                 diagnostics.append({"endpoint":base,"error":str(e)})
     uniq=list({(x["code"],x["label"]):x for x in terms}.values())
-   m = re.match(r"^(Spring|Summer|Fall)\s+(\d{4})$", semester.strip(), re.I)
-
-if m:
-    season = m.group(1).lower()
-    year = m.group(2)
-
-    # Convert "Spring 2027" into a match for UVU's
-    # "2027 Spring (View Only)" term label
+  
+    # Match Spring 2027 to UVU's "2027 Spring (View Only)"
     parts = semester.strip().split()
     matches = []
 
-       # Spring 2027 verified from UVU's returned term list
-    if semester.strip().lower() == "spring 2027":
-        matches = [
-            x for x in uniq
-            if x["code"] == "202730"
-            and "2027 spring" in x["label"].lower()
-            and "non-credit" not in x["label"].lower()
-        ]
-    else:
-        words = semester.lower().split()
-        matches = [
-            x for x in uniq
-            if all(w in x["label"].lower() for w in words)
-            and "non-credit" not in x["label"].lower()
-        ]
+    if len(parts) == 2:
+        season = parts[0].lower()
+        year = parts[1]
+
+        for x in uniq:
+            label = x["label"].lower().strip()
+
+            if (
+                year in label
+                and season in label
+                and "non-credit" not in label
+            ):
+                matches.append(x)
 
     if len(matches) == 1:
         return {
