@@ -124,7 +124,11 @@ def resolve_live_term(semester):
                 diagnostics.append({"endpoint":base,"error":str(e)})
     uniq=list({(x["code"],x["label"]):x for x in terms}.values())
     words=semester.lower().split()
-    matches=[x for x in uniq if all(w in x["label"].lower() for w in words)]
+matches=[
+    x for x in uniq
+    if all(w in x["label"].lower() for w in words)
+    and "non-credit" not in x["label"].lower()
+]
     if len(matches)==1:
         return {"verified":True,**matches[0],"diagnostics":diagnostics}
     return {"verified":False,"matches":matches,"termsSeen":uniq,"diagnostics":diagnostics}
