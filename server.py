@@ -134,19 +134,21 @@ if m:
     parts = semester.strip().split()
     matches = []
 
-    if len(parts) == 2:
-        season = parts[0].lower()
-        year = parts[1]
-
-        for x in uniq:
-            label = x["label"].lower().strip()
-
-            if (
-                year in label
-                and season in label
-                and "non-credit" not in label
-            ):
-                matches.append(x)
+       # Spring 2027 verified from UVU's returned term list
+    if semester.strip().lower() == "spring 2027":
+        matches = [
+            x for x in uniq
+            if x["code"] == "202730"
+            and "2027 spring" in x["label"].lower()
+            and "non-credit" not in x["label"].lower()
+        ]
+    else:
+        words = semester.lower().split()
+        matches = [
+            x for x in uniq
+            if all(w in x["label"].lower() for w in words)
+            and "non-credit" not in x["label"].lower()
+        ]
 
     if len(matches) == 1:
         return {
@@ -160,7 +162,7 @@ if m:
         "matches": matches,
         "termsSeen": uniq,
         "diagnostics": diagnostics
-    }   
+    }
 @app.get("/api/uvu/status")
 def uvu_status():
     semester=request.args.get("semester","Spring 2027")
