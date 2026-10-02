@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ScheduleForge Live UVU</title><style>
+*{box-sizing:border-box}body{font-family:system-ui;margin:0;background:#f3f6f4;color:#173c2b}
+header{background:#173c2b;color:white;padding:18px}.wrap{max-width:760px;margin:auto;padding:16px}
+.card{background:white;border:1px solid #dce6df;padding:18px;border-radius:15px;margin:12px 0}
+.sem{font-size:30px;font-weight:900}.badge{display:inline-block;padding:6px 9px;border-radius:12px;font-size:11px;font-weight:900;background:#83551d;color:white}
+input,button{width:100%;font:inherit;padding:13px;border-radius:10px;margin:5px 0;border:1px solid #c8d5cd}
+button{background:#17683f;color:white;border:0;font-weight:800}.section{padding:12px 0;border-top:1px solid #e5ebe7}
+small{color:#6a786f}pre{white-space:pre-wrap;font-size:11px}
+@media(max-width:600px){.wrap{padding:10px}.sem{font-size:26px}.card{padding:14px}}
+</style></head><body><header><b>ScheduleForge</b></header><div class="wrap">
+<div class="card"><small>SCHEDULE BEING BUILT FOR</small><div class="sem">SPRING 2027</div>
+<p><span class="badge" id="status">CHECKING UVU…</span></p><div id="statusText">Verifying semester with UVU Banner.</div></div>
+<div class="card"><b>Live course lookup</b><input id="course" value="ME 3335" autocomplete="off">
+<button id="pull" onclick="lookup()" disabled>Pull actual UVU sections</button></div>
+<div class="card" id="results">Waiting for UVU verification.</div></div>
+<script>
+async function check(){
+ let b=document.querySelector('#status'),t=document.querySelector('#statusText'),btn=document.querySelector('#pull');
+ try{let r=await fetch('/api/uvu/status?semester=Spring%202027'),j=await r.json();
+ if(r.ok&&j.status==='live'){b.textContent='LIVE UVU · SPRING 2027 VERIFIED';b.style.background='#17683f';
+ t.textContent='Banner term '+j.bannerTermCode+' · '+j.bannerLabel;btn.disabled=false}
+ else{b.textContent='UVU TERM NOT VERIFIED';b.style.background='#8b3939';t.textContent=j.message||j.error||'Could not verify Spring 2027.'}}
+ catch(e){b.textContent='UVU CONNECTION UNAVAILABLE';b.style.background='#8b3939';t.textContent=e.message}}
+async function lookup(){let o=document.querySelector('#results');o.textContent='Pulling live UVU sections…';
+ let q=document.querySelector('#course').value;
+ try{let r=await fetch('/api/uvu/course?semester=Spring%202027&course='+encodeURIComponent(q)),j=await r.json();
+ if(!r.ok){o.innerHTML='<b>Request failed</b><pre>'+JSON.stringify(j,null,2)+'</pre>';return}
+ o.innerHTML='<b>'+j.course+' · '+j.sections.length+' UVU sections</b>'+j.sections.map(s=>
+ '<div class="section"><b>Section '+s.section+'</b> · CRN '+s.crn+'<br>'+s.professor+'<br>'+
+ (s.meetings||[]).map(m=>m.days.join('')+' '+m.start+'–'+m.end+' · '+m.location).join('<br>')+
+ '<br><small>'+s.delivery+(s.seatsAvailable===null?'':' · '+s.seatsAvailable+' seats remaining')+'</small></div>').join('')}
+ catch(e){o.textContent=e.message}}
+check();
+</script></body></html>

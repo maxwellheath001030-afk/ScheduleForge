@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ScheduleForge — UVU Prototype</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7f8;color:#17231d;font-family:Arial,sans-serif}header{height:70px;background:#fff;border-bottom:1px solid #dfe6e2;display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;color:#738078;font-weight:500}.pill{background:#e9f3ed;color:#24583e;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:700}main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:end;margin-bottom:28px}.hero h1{font-size:44px;line-height:1.05;margin:8px 0}.hero h1 span{color:#16764d}.hero p{color:#65726b;line-height:1.55}.eyebrow{font-size:11px;font-weight:800;color:#16764d;letter-spacing:.08em}.metric{background:#173c2b;color:white;border-radius:17px;padding:22px}.metric small{font-size:10px;color:#bdd3c7}.metric strong{display:block;font-size:36px;margin:7px 0}.metric span{font-size:11px;color:#bdd3c7}.layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.panel{background:white;border:1px solid #dfe6e2;border-radius:16px;padding:22px}aside{position:sticky;top:15px}h2{margin:0 0 17px;font-size:21px}label{display:block;font-size:12px;font-weight:700;color:#506058;margin:17px 0 7px}.add{display:flex;gap:7px}.add input,select{width:100%;padding:10px;border:1px solid #d3ddd7;border-radius:8px;background:white}.add button{width:42px;border:0;border-radius:8px;background:#166b45;color:white;font-size:20px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{border:0;border-radius:7px;background:#eef4f0;color:#28503d;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer}.availability{display:flex;flex-direction:column;gap:6px}.daywin{display:grid;grid-template-columns:40px 1fr 10px 1fr;gap:5px;align-items:center}.daywin button{border:0;border-radius:7px;padding:8px 3px;font-size:10px;font-weight:800;background:#e5f2ea;color:#166b45}.daywin button.off{background:#eee;color:#999}.daywin input{min-width:0;width:100%;padding:6px 2px;border:1px solid #d3ddd7;border-radius:6px;font-size:10px}.range{width:100%;accent-color:#166b45}.rangeval{text-align:right;color:#166b45;font-size:11px;font-weight:700}.note{font-size:11px;line-height:1.55;color:#89958f;margin-top:18px}.resultHead{display:flex;justify-content:space-between;border-bottom:1px solid #e9eeeb;padding-bottom:14px}.resultHead small{font-size:10px;color:#75827b;letter-spacing:.1em}.calendar{border:1px solid #dfe7e2;border-radius:13px;margin:16px 0;overflow:hidden}.calTitle{background:#173c2b;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;font-size:12px}.week{display:grid;grid-template-columns:repeat(5,1fr);min-height:150px}.daycol{padding:9px 6px;border-right:1px solid #e5ebe7}.daycol:last-child{border:0}.daycol>b{font-size:10px;color:#68776f}.event{margin-top:7px;background:#e7f2eb;border-left:3px solid #227b53;border-radius:5px;padding:6px}.event strong,.event span,.event small{display:block;font-size:9px}.event strong{font-size:10px}.event span,.event small{color:#617068;margin-top:2px}.result{border:1px solid #dfe6e2;border-radius:13px;margin-top:13px;overflow:hidden;cursor:pointer}.result:hover{box-shadow:0 5px 16px #173c2b14}.result.best{border:2px solid #238158}.rank{padding:10px 13px;background:#f8faf9;display:flex;justify-content:space-between;font-weight:800}.rank b{font-size:9px;color:#166b45}.stats{display:flex;gap:28px;padding:14px;border-bottom:1px solid #edf0ee}.stats strong{display:block;font-size:22px;color:#174e35}.stats span{font-size:10px;color:#7d8983}.classes{padding:5px 14px 10px}.classrow{display:grid;grid-template-columns:95px 60px 1fr;padding:7px 0;border-bottom:1px dashed #e8ece9;font-size:11px}.classrow:last-child{border:0}.classrow span{color:#6d7973}.empty{padding:40px;text-align:center;color:#7c8882}@media(max-width:850px){.hero{grid-template-columns:1fr}.metric{display:none}.layout{grid-template-columns:1fr}aside{position:static}.week{grid-template-columns:1fr}.daycol{border-right:0;border-bottom:1px solid #e5ebe7}.hero h1{font-size:34px}}
+
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.badge{font-size:8px;font-weight:800;padding:3px 6px;border-radius:10px;background:#eef3f0;color:#53645b}.badge.open{background:#e1f4e8;color:#17683f}.badge.closed{background:#f5e7e7;color:#8b3939}.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:7px}.checkline{display:flex;gap:8px;align-items:center;font-size:11px;color:#53645b;margin-top:10px}.checkline input{accent-color:#166b45}
+
+@media(max-width:600px){
+  body{font-size:14px}
+  header{height:auto;min-height:64px;padding:10px 14px;gap:8px;align-items:flex-start}
+  .brand{font-size:17px}.brand small{font-size:9px}
+  header>div:last-child{flex-direction:column!important;gap:3px!important;align-items:flex-end!important}
+  header>div:last-child>div:first-child{font-size:8px!important}
+  .pill{padding:6px 9px;font-size:10px}
+  main{padding:14px 10px 50px}
+  #termBanner{padding:15px!important;margin-bottom:15px!important;border-radius:13px!important;display:block!important}
+  #termBanner>div:last-child{min-width:0!important;margin-top:12px}
+  #termBig{font-size:25px!important}
+  .hero{gap:12px;margin-bottom:14px}
+  .hero h1{font-size:29px;margin:5px 0}
+  .hero p{font-size:12px;margin:8px 0}
+  .panel{padding:15px;border-radius:13px}
+  .layout{gap:12px}
+  h2{font-size:19px;margin-bottom:12px}
+  label{margin-top:13px}
+  .add{gap:5px}.add input,select{min-height:42px;font-size:16px}.add button{min-height:42px}
+  .tag{padding:9px;font-size:11px}
+  .daywin{grid-template-columns:38px 1fr 9px 1fr}
+  .daywin button{min-height:36px}.daywin input{font-size:13px;min-height:36px}
+  .toolbar{grid-template-columns:1fr}
+  .resultHead{align-items:center;gap:8px}
+  .resultHead h2{margin:0}
+  .calendar{margin:12px 0}
+  .calTitle{font-size:11px}
+  .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;min-height:180px}
+  .daycol{min-width:82%;border-right:1px solid #e5ebe7;border-bottom:0;scroll-snap-align:start;padding:10px}
+  .event{padding:8px}.event strong{font-size:12px}.event span,.event small{font-size:10px}
+  .stats{gap:10px;justify-content:space-between;padding:11px}
+  .stats>div{flex:1}.stats strong{font-size:18px}.stats span{font-size:9px}
+  .classes{padding:5px 10px 9px}
+  .classrow{grid-template-columns:72px 55px 1fr;gap:4px;font-size:10px}
+  .classrow b{font-size:10px}
+  .badges{gap:3px}.badge{font-size:7px;padding:3px 5px}
+  .empty{padding:24px 10px}
+  button,.tag,.result{touch-action:manipulation}
+}
+
+</style>
+</head>
+<body>
+<header><div class="brand">▣ ScheduleForge<small>UVU schedule optimizer · v1.5 Live Server</small></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
+      <div class="pill" id="dataStatus">SPRING 2027</div>
+    </div></header>
+<main>
+<section id="termBanner" style="background:#173c2b;color:white;border-radius:18px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+  <div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.13em;color:#b9d2c5">SCHEDULE BEING BUILT FOR</div>
+    <div id="termBig" style="font-size:28px;font-weight:900;margin-top:3px">SPRING 2027</div><div id="sourceGuard" style="font-size:10px;font-weight:800;margin-top:7px;padding:5px 8px;background:#7d4d19;border-radius:8px;display:inline-block">DEMO DATA — NOT LIVE UVU</div>
+    <div style="font-size:11px;color:#c7d9d0;margin-top:3px">UVU · Utah Valley University</div>
+  </div>
+  <div style="min-width:210px">
+    <label style="color:#c7d9d0;margin:0 0 5px">Semester</label>
+    <select id="termSelect" style="font-weight:800">
+      <option value="Spring 2027" selected>Spring 2027</option>
+      <option value="Fall 2026">Fall 2026</option>
+      <option value="Summer 2027">Summer 2027</option>
+      <option value="Fall 2027">Fall 2027</option>
+    </select>
+  </div>
+</section>
+<section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, set when you can work, and compare conflict-free schedules automatically.</p></div><div class="metric"><small>BEST RESULT</small><strong id="bestMetric">—</strong><span>potential work hours / week</span></div></section>
+<div class="layout">
+<aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div>
+<label>Work availability</label><div class="availability" id="availability"></div>
+<label>Campus → work commute</label><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div>
+<label>Minimum useful work block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
+<label>Optimize for</label><select id="mode"><option value="work">Maximum work hours</option><option value="compact">Fewest class gaps</option><option value="days">Fewest campus days</option><option value="late">Avoid early classes</option></select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
+<label>Course data</label>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+  <button id="importBtn" style="padding:9px;border:1px solid #cbd8d0;background:white;border-radius:8px;font-weight:700;color:#24583e;cursor:pointer">Import JSON</button>
+  <button id="templateBtn" style="padding:9px;border:0;background:#e9f3ed;border-radius:8px;font-weight:700;color:#24583e;cursor:pointer">Get template</button>
+</div>
+<input id="fileInput" type="file" accept=".json,application/json" style="display:none">
+<p class="note" id="dataNote">This version works completely offline with prototype section data. You can now import a JSON file containing real sections without changing the app.</p></aside>
+<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><b id="shown"></b></div><div id="calendar"></div><div id="results"></div></section>
+</div></main>
+<script>
+let DATA=[
+{course:'ME 4820',section:'001',meetings:[{days:['M','W','F'],start:540,end:590}]},{course:'ME 4820',section:'002',meetings:[{days:['M','W','F'],start:600,end:650}]},
+{course:'ME 4180',section:'001',meetings:[{days:['M','W'],start:600,end:675}]},{course:'ME 4180',section:'002',meetings:[{days:['T','R'],start:600,end:675}]},
+{course:'ME 4510',section:'001',meetings:[{days:['M'],start:720,end:770}]},{course:'ME 4010',section:'001',meetings:[{days:['M','W'],start:780,end:855}]},{course:'ME 4010',section:'002',meetings:[{days:['T','R'],start:780,end:855}]},
+{course:'ME 4900R',section:'004',meetings:[{days:['M','W'],start:960,end:1035}]},{course:'ME 4900R',section:'003',meetings:[{days:['T','R'],start:510,end:585}]},
+{course:'ME 3335',section:'205',meetings:[{days:['T','R'],start:420,end:570}]},{course:'ME 3335',section:'206',meetings:[{days:['M','W'],start:420,end:570}]},
+{course:'ME 4015',section:'205',meetings:[{days:['R'],start:600,end:750}]},{course:'ME 4015',section:'206',meetings:[{days:['F'],start:600,end:750}]}];
+DATA=DATA.map((x,i)=>({...x,
+ crn:String(41000+i),
+ professor:["J. Smith","A. Jensen","K. Patel","M. Garcia"][i%4],
+ title:x.course,
+ seatsAvailable:[12,5,0,18,9,4,7][i%7],
+ capacity:24
+}));
+const D=['M','T','W','R','F'], DN={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri'}, FULL={M:'Monday',T:'Tuesday',W:'Wednesday',R:'Thursday',F:'Friday'};
+let courses=['ME 4820','ME 4180','ME 4510','ME 4010','ME 4900R','ME 3335','ME 4015'], selected=0;
+let windows=Object.fromEntries(D.map(d=>[d,{enabled:true,start:420,end:1020}]));
+const fmt=m=>{let h=Math.floor(m/60),mm=m%60,a=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(mm).padStart(2,'0')} ${a}`};
+const tin=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`, tval=s=>{let [h,m]=s.split(':').map(Number);return h*60+m};
+function clash(a,b){return a.meetings.some(x=>b.meetings.some(y=>x.days.some(d=>y.days.includes(d))&&x.start<y.end&&y.start<x.end))}
+function combos(groups){let out=[[]];for(const g of groups){let n=[];for(const base of out)for(const s of g)if(base.every(x=>!clash(x,s)))n.push([...base,s]);out=n}return out}
+function metrics(s){let work=0,gaps=0,campus=0,early=0,commute=+document.querySelector('#commute').value,minShift=+document.querySelector('#minShift').value;for(const d of D){let blocks=s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>[m.start,m.end])).sort((a,b)=>a[0]-b[0]);if(blocks.length)campus++;early+=blocks.filter(b=>b[0]<540).length;let w=windows[d];if(w.enabled){let cursor=w.start;for(const [st,en] of blocks){let a=Math.min(w.end,st-commute)-cursor;if(a>=minShift)work+=a;cursor=Math.max(cursor,en+commute,w.start)}if(w.end-cursor>=minShift)work+=w.end-cursor}for(let i=1;i<blocks.length;i++)gaps+=Math.max(0,blocks[i][0]-blocks[i-1][1])}return{work:work/60,gaps:gaps/60,campus,early}}
+function getResults(){let openOnly=document.querySelector('#openOnly').checked;let groups=courses.map(c=>DATA.filter(x=>x.course===c&&(!openOnly||x.seatsAvailable===null||x.seatsAvailable>0)));if(groups.some(g=>!g.length))return[];let mode=document.querySelector('#mode').value;return combos(groups).map(s=>{let m=metrics(s);let score=mode==='work'?m.work*100-m.gaps*3-m.campus:mode==='compact'?-m.gaps*100+m.work:mode==='days'?-m.campus*100+m.work:-m.early*100+m.work;return{s,...m,score}}).sort((a,b)=>b.score-a.score).slice(0,10)}
+function renderAvailability(){document.querySelector('#availability').innerHTML=D.map(d=>`<div class="daywin"><button data-day="${d}" class="${windows[d].enabled?'':'off'}">${DN[d]}</button><input data-day="${d}" data-k="start" type="time" value="${tin(windows[d].start)}" ${windows[d].enabled?'':'disabled'}><span>–</span><input data-day="${d}" data-k="end" type="time" value="${tin(windows[d].end)}" ${windows[d].enabled?'':'disabled'}></div>`).join('');document.querySelectorAll('.daywin button').forEach(b=>b.onclick=()=>{let d=b.dataset.day;windows[d].enabled=!windows[d].enabled;render()});document.querySelectorAll('.daywin input').forEach(i=>i.onchange=()=>{windows[i.dataset.day][i.dataset.k]=tval(i.value);render()})}
+function render(){document.querySelector('#tags').innerHTML=courses.map(c=>`<button class="tag" data-c="${c}">${c} ×</button>`).join('');document.querySelectorAll('.tag').forEach(b=>b.onclick=()=>{courses=courses.filter(c=>c!==b.dataset.c);selected=0;render()});renderAvailability();let rs=getResults();document.querySelector('#shown').textContent=rs.length+' shown';document.querySelector('#bestMetric').textContent=rs.length?rs[0].work.toFixed(1)+' hrs':'—';if(selected>=rs.length)selected=0;let a=rs[selected];document.querySelector('#calendar').innerHTML=a?`<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.work.toFixed(1)} work hrs · ${a.campus} campus days</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${a.s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>`<div class="event"><strong>${x.course}</strong><span>${fmt(m.start)}–${fmt(m.end)}</span><small>Sec ${x.section} · ${x.professor||'TBA'}</small></div>`)).join('')}</div>`).join('')}</div></div>`:'';document.querySelector('#results').innerHTML=rs.length?rs.map((r,i)=>`<div class="result ${i===0?'best':''}" data-i="${i}"><div class="rank"><span>#${i+1}</span>${i===0?'<b>BEST FIT</b>':''}</div><div class="stats"><div><strong>${r.work.toFixed(1)}</strong><span>work hrs/wk</span></div><div><strong>${r.gaps.toFixed(1)}</strong><span>class-gap hrs</span></div><div><strong>${r.campus}</strong><span>campus days</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${x.course}</b><span>Sec ${x.section}<br><small>CRN ${x.crn||'—'}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}`).join(', ')}<div class="badges"><span class="badge">${x.professor||'Instructor TBA'}</span>${x.seatsAvailable===null?'':`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seats':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join(''):'<div class="empty">No conflict-free schedule found. A course may not exist in the prototype dataset.</div>';document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()})}
+document.querySelector('#addCourse').onclick=()=>{let i=document.querySelector('#courseInput'),c=i.value.trim().toUpperCase();if(c&&!courses.includes(c))courses.push(c);i.value='';selected=0;render()};document.querySelector('#courseInput').onkeydown=e=>{if(e.key==='Enter')document.querySelector('#addCourse').click()};document.querySelector('#commute').oninput=e=>{document.querySelector('#commuteVal').textContent=e.target.value+' minutes';render()};document.querySelector('#minShift').onchange=render;document.querySelector('#mode').onchange=render;document.querySelector('#openOnly').onchange=render;
+function normalizeImported(raw){
+  const rows=Array.isArray(raw)?raw:(raw.sections||[]);
+  return rows.map((x,i)=>{
+    if(!x.course) throw new Error(`Section ${i+1} is missing "course"`);
+    if(!x.section) throw new Error(`Section ${i+1} is missing "section"`);
+    let meetings=(x.meetings||[]).map((m,j)=>{
+      let days=m.days||[];
+      if(typeof days==="string") days=days.split("").filter(d=>D.includes(d));
+      let start=typeof m.start==="string"?tval(m.start):m.start;
+      let end=typeof m.end==="string"?tval(m.end):m.end;
+      if(!Array.isArray(days)||!days.length||!Number.isFinite(start)||!Number.isFinite(end)||end<=start)
+        throw new Error(`${x.course} section ${x.section}: invalid meeting ${j+1}`);
+      return {days,start,end};
+    });
+    return {course:String(x.course).trim().toUpperCase(),section:String(x.section),crn:x.crn||"",professor:x.professor||"",title:x.title||"",seatsAvailable:Number.isFinite(+x.seatsAvailable)?+x.seatsAvailable:null,capacity:Number.isFinite(+x.capacity)?+x.capacity:null,delivery:x.delivery||"",meetings};
+  });
+}
+function downloadText(name,text){
+  const blob=new Blob([text],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+document.querySelector('#importBtn').onclick=()=>document.querySelector('#fileInput').click();
+document.querySelector('#fileInput').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  try{
+    const parsed=JSON.parse(await f.text());
+    if(parsed.term){
+      const t=String(parsed.term);
+      let sel=document.querySelector('#termSelect');
+      if(![...sel.options].some(o=>o.value===t)){let o=document.createElement("option");o.value=t;o.textContent=t;sel.appendChild(o)}
+      sel.value=t; setTerm(t);
+    }
+    const normalized=normalizeImported(parsed);
+    if(!normalized.length) throw new Error("No sections were found.");
+    DATA=normalized;
+    const unique=[...new Set(DATA.map(x=>x.course))];
+    courses=unique.slice(0,Math.min(7,unique.length));
+    selected=0;
+    document.querySelector('#dataStatus').textContent=`${document.querySelector("#termSelect").value.toUpperCase()} · ${DATA.length} SECTIONS`;
+    document.querySelector('#dataNote').textContent=`Loaded ${DATA.length} sections across ${unique.length} courses from ${f.name}.`;
+    document.querySelector('#sourceGuard').textContent=(parsed.source||"").toLowerCase().includes("uvu")?"UVU DATA IMPORTED":"IMPORTED DATA";
+    document.querySelector('#sourceGuard').style.background=(parsed.source||"").toLowerCase().includes("uvu")?"#17683f":"#53645b";
+    render();
+  }catch(err){alert("Could not import that file:\\n\\n"+err.message)}
+  e.target.value="";
+};
+document.querySelector('#templateBtn').onclick=()=>{
+ const template={term:document.querySelector("#termSelect").value,sections:[
+  {course:"ME 3335",section:"205",crn:"",professor:"Professor Name",title:"Thermal/Fluid Experimentation",
+   seatsAvailable:12,capacity:24,delivery:"In Person",meetings:[{days:["T","R"],start:"07:00",end:"09:30"}]},
+  {course:"ME 3335",section:"206",crn:"",professor:"Professor Name",title:"Thermal/Fluid Experimentation",
+   seatsAvailable:0,capacity:24,delivery:"In Person",meetings:[{days:["M","W"],start:"07:00",end:"09:30"}]}
+ ]};
+ downloadText("scheduleforge-section-template.json",JSON.stringify(template,null,2));
+};
+function setTerm(t){
+  document.querySelector('#termBig').textContent=t.toUpperCase();
+  document.querySelector('#sideTerm').textContent=t;
+  document.querySelector('#dataStatus').textContent=t.toUpperCase();
+}
+document.querySelector('#termSelect').onchange=e=>setTerm(e.target.value);
+setTerm(document.querySelector('#termSelect').value);
+render();
+</script>
+</body></html>
