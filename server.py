@@ -143,8 +143,19 @@ def uvu_status():
     except Exception as e:
         return jsonify(status="unavailable",semester=semester,error=str(e)),503
 
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
 @app.get("/")
-def index(): return send_from_directory(".","ScheduleForge.html")
+def index():
+    return send_from_directory(APP_DIR, "ScheduleForge.html")
+
+@app.get("/ScheduleForge.html")
+def scheduleforge_page():
+    return send_from_directory(APP_DIR, "ScheduleForge.html")
+
+@app.get("/live-test.html")
+def live_test_page():
+    return send_from_directory(APP_DIR, "live-test.html")
 
 @app.get("/api/uvu/course")
 def course():
