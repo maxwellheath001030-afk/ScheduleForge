@@ -29,11 +29,42 @@ def clock(s):
     if ap=="p":h+=12
     return f"{h:02d}:{mi:02d}"
 
+def parse_instructors(text):
+    names=[]
+    for pattern in [
+        r"([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+,\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+?)\s*\(P\s*\(Primary\)\)",
+        r"([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+,\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+?)\s*\(Primary\)"
+    ]:
+        for name in re.findall(pattern,text,re.I):
+            name=clean(name)
+            if name and name not in names: names.append(name)
+    return names
+
+def parse_credits(text):
+    for pattern in [r"(\d+(?:\.\d+)?)\s+Credits?",r"Credit Hours?\s*:?\s*(\d+(?:\.\d+)?)"]:
+        m=re.search(pattern,text,re.I)
+        if m:
+            value=float(m.group(1))
+            return int(value) if value.is_integer() else value
+    return None
+
+def parse_schedule_type(text):
+    m=re.search(r"\b(Face to Face(?:\s+(?:Lab|Lecture|Seminar|Clinical|Studio))?|Online(?:\s+\w+)?|Livestream|Live Interactive|Hybrid(?:\s+\w+)?)\s+Schedule Type\b",text,re.I)
+    return clean(m.group(1)) if m else ""
+
+def parse_meetings(text):
+    meetings=[]
+    pattern=re.compile(
+        r"(Class|Lab|Lecture|Seminar|Clinical|Studio)?\s*(\d{1,2}:\d{2}\s*[ap]m)\s*-\s*(\d{1,2}:\d{2}\s*[ap]m)\s+([MTWRFSU]+)\s+(.+?)\s+([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}\s*-\s*[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})",re.I)
+    for tm in pattern.finditer(text):
+        meeting_type,st,en,days,where,dates=tm.groups()
+        meetings.append({"type":clean(meeting_type) or "Class","days":list(days.upper()),"start":clock(st),"end":clock(en),"location":clean(where),"dateRange":clean(dates)})
+    return meetings
+
 def parse_listing(html,subject,course,semester):
     soup=BeautifulSoup(html,"html.parser"); text=soup.get_text("\n",strip=True)
     assoc=re.search(r"Associated Term:\s*([^\n]+)",text,re.I)
     actual=clean(assoc.group(1)) if assoc else ""
-    # Hard guard: if UVU tells us a term, it must match the requested semester.
     wanted=set(semester.lower().split()); got=set(actual.lower().split())
     if actual and not wanted.issubset(got):
         raise ValueError(f"UVU returned {actual}, not {semester}. Response rejected.")
@@ -42,25 +73,40 @@ def parse_listing(html,subject,course,semester):
     for i,m in enumerate(ms):
         title,crn,subj,num,section=m.groups()
         block=text[m.end():ms[i+1].start() if i+1<len(ms) else len(text)]
-        sched=re.search(r"\b(Face to Face|Online|Livestream|Live Interactive|Hybrid)\s+Schedule Type",block,re.I)
-        instructors=[]
-        for nm in re.findall(r"([A-Z][A-Za-z .'\-]+?)\s+\(P\s+\(Primary\)\)",block):
-            instructors.append(clean(nm))
-        meetings=[]
-        for tm in re.finditer(r"Class\s+(\d{1,2}:\d{2}\s*[ap]m)\s*-\s*(\d{1,2}:\d{2}\s*[ap]m)\s+([MTWRFSU]+)\s+(.+?)\s+([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}\s*-\s*[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})",block,re.I):
-            st,en,days,where,dates=tm.groups()
-            meetings.append({"days":list(days.upper()),"start":clock(st),"end":clock(en),"location":clean(where),"dateRange":clean(dates)})
-        rows.append({"course":f"{subj.upper()} {num.upper()}","title":clean(title),"section":section,"crn":crn,
-                     "professor":instructors[0] if instructors else "TBA","delivery":sched.group(1) if sched else "",
-                     "meetings":meetings,"seatsAvailable":None,"capacity":None})
+        instructors=parse_instructors(block)
+        schedule_type=parse_schedule_type(block)
+        rows.append({
+            "course":f"{subj.upper()} {num.upper()}","subject":subj.upper(),"courseNumber":num.upper(),
+            "title":clean(title),"section":section,"crn":crn,"credits":parse_credits(block),
+            "professor":instructors[0] if instructors else "TBA",
+            "primaryInstructor":instructors[0] if instructors else None,"instructors":instructors,
+            "scheduleType":schedule_type,"delivery":schedule_type,"meetings":parse_meetings(block),
+            "capacity":None,"enrolled":None,"seatsAvailable":None,
+            "waitlistCapacity":None,"waitlistEnrolled":None,"waitlistAvailable":None,
+            "linkedSections":[],"prerequisites":"","seatStatus":"unknown"
+        })
     return actual,rows
 
 def enrich(term,row):
     url=BASE+DETAIL+"?"+urlencode({"crn_in":row["crn"],"term_in":term})
-    text=BeautifulSoup(get(url),"html.parser").get_text(" ",strip=True)
-    m=re.search(r"Registration Availability.*?Capacity\s+Actual\s+Remaining\s+Seats\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I)
-    if m:
-        row["capacity"]=int(m.group(1)); row["enrolled"]=int(m.group(2)); row["seatsAvailable"]=int(m.group(3))
+    html=get(url); text=clean(BeautifulSoup(html,"html.parser").get_text(" ",strip=True))
+    seats=re.search(r"Registration Availability.*?Capacity\s+Actual\s+Remaining\s+Seats\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I|re.S)
+    if seats:
+        row["capacity"]=int(seats.group(1)); row["enrolled"]=int(seats.group(2)); row["seatsAvailable"]=int(seats.group(3))
+        row["seatStatus"]="available" if row["seatsAvailable"]>0 else "full"
+    wait=re.search(r"Waitlist.*?Capacity\s+Actual\s+Remaining(?:\s+Seats)?\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I|re.S)
+    if wait:
+        row["waitlistCapacity"]=int(wait.group(1)); row["waitlistEnrolled"]=int(wait.group(2)); row["waitlistAvailable"]=int(wait.group(3))
+    instructors=parse_instructors(text)
+    if instructors:
+        row["instructors"]=instructors; row["primaryInstructor"]=instructors[0]; row["professor"]=instructors[0]
+    if row["credits"] is None: row["credits"]=parse_credits(text)
+    if not row["scheduleType"]:
+        row["scheduleType"]=parse_schedule_type(text); row["delivery"]=row["scheduleType"]
+    prereq=re.search(r"Prerequisites?\s*:?\s*(.+?)(?=Corequisites?|Restrictions?|Mutual Exclusion|$)",text,re.I)
+    if prereq: row["prerequisites"]=clean(prereq.group(1))
+    linked=re.findall(r"(?:Linked|Cross[- ]?List(?:ed)?)\s+(?:Section|CRN).*?(\d{4,6})",text,re.I)
+    row["linkedSections"]=list(dict.fromkeys(linked))
     return row
 
 
@@ -155,6 +201,10 @@ def resolve_live_term(semester):
         "termsSeen": uniq,
         "diagnostics": diagnostics
     }
+@app.get("/health")
+def health():
+    return jsonify(status="ok",app="ScheduleForge"),200
+
 @app.get("/api/uvu/status")
 def uvu_status():
     semester=request.args.get("semester","Spring 2027")
@@ -205,7 +255,9 @@ def course():
                            semester=semester,associatedTerm=actual,sourceUrl=url),502
         for row in rows:
             try: enrich(term,row)
-            except Exception as e: row["seatStatus"]="unavailable"
+            except Exception as e:
+                row["seatStatus"]="unavailable"
+                row["enrichmentError"]=str(e)
         return jsonify(source="UVU public Banner",semester=semester,associatedTerm=actual,course=q,sections=rows)
     except Exception as e:
         return jsonify(error=str(e),semester=semester,sourceUrl=url),502
