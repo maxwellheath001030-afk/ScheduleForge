@@ -129,20 +129,38 @@ if m:
     season = m.group(1).lower()
     year = m.group(2)
 
-    matches = [
-        x for x in uniq
-        if re.search(
-            rf"^{re.escape(year)}\s+{re.escape(season)}(?:\s+\(View Only\))?$",
-            x["label"].strip(),
-            re.I
-        )
-    ]
-else:
+    # Convert "Spring 2027" into a match for UVU's
+    # "2027 Spring (View Only)" term label
+    parts = semester.strip().split()
     matches = []
-    if len(matches)==1:
-        return {"verified":True,**matches[0],"diagnostics":diagnostics}
-    return {"verified":False,"matches":matches,"termsSeen":uniq,"diagnostics":diagnostics}
 
+    if len(parts) == 2:
+        season = parts[0].lower()
+        year = parts[1]
+
+        for x in uniq:
+            label = x["label"].lower().strip()
+
+            if (
+                year in label
+                and season in label
+                and "non-credit" not in label
+            ):
+                matches.append(x)
+
+    if len(matches) == 1:
+        return {
+            "verified": True,
+            **matches[0],
+            "diagnostics": diagnostics
+        }
+
+    return {
+        "verified": False,
+        "matches": matches,
+        "termsSeen": uniq,
+        "diagnostics": diagnostics
+    }   
 @app.get("/api/uvu/status")
 def uvu_status():
     semester=request.args.get("semester","Spring 2027")
