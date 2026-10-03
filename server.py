@@ -30,14 +30,26 @@ def clock(s):
     return f"{h:02d}:{mi:02d}"
 
 def parse_instructors(text):
+    """Parse UVU Banner instructor names, including names split across HTML lines."""
+    normalized=clean(text)
     names=[]
-    for pattern in [
-        r"([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+,\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+?)\s*\(P\s*\(Primary\)\)",
-        r"([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+,\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+?)\s*\(Primary\)"
-    ]:
-        for name in re.findall(pattern,text,re.I):
+
+    # UVU's legacy Banner output currently renders primary instructors like:
+    # Amal Saeed Yagub ( P )
+    # Masood Fazeli Amin ( P )
+    # It may also use "(Primary)" variants, so keep those fallbacks.
+    patterns=[
+        r"(?:Face to Face(?:\s+\w+)?|Online(?:\s+\w+)?|Livestream|Live Interactive|Hybrid(?:\s+\w+)?)\s+([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+){1,5})\s*\(\s*P\s*\)",
+        r"([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\-]+){1,5})\s*\(\s*Primary\s*\)",
+        r"([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+,\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+?)\s*\(\s*(?:P\s*)?\(?Primary\)?\s*\)"
+    ]
+
+    for pattern in patterns:
+        for name in re.findall(pattern,normalized,re.I):
             name=clean(name)
-            if name and name not in names: names.append(name)
+            if name and name not in names:
+                names.append(name)
+
     return names
 
 def parse_credits(text):
@@ -233,35 +245,6 @@ def scheduleforge_page():
 def live_test_page():
     return send_from_directory(APP_DIR, "live-test.html")
 
-
-@app.get("/api/uvu/debug")
-def uvu_debug():
-    semester=request.args.get("semester","Spring 2027")
-    q=request.args.get("course","ME 3335").strip().upper()
-    resolved=resolve_live_term(semester)
-    if not resolved.get("verified"):
-        return jsonify(error="Semester could not be verified.",diagnostic=resolved),503
-    parts=q.split()
-    if len(parts)!=2:
-        return jsonify(error='Use a course like "ME 3335".'),400
-    subject,num=parts
-    term=resolved["code"]
-    url=BASE+LIST+"?"+urlencode({"crse_in":num,"schd_in":"%","subj_in":subject,"term_in":term})
-    try:
-        text=BeautifulSoup(get(url),"html.parser").get_text("\n",strip=True)
-        pat=re.compile(r"(?m)^(.+?)\s+-\s+(\d{4,6})\s+-\s+("+re.escape(subject)+r")\s+("+re.escape(num)+r")\s+-\s+([A-Z0-9]+)\s*$",re.I)
-        matches=list(pat.finditer(text)); sections=[]
-        for i,m in enumerate(matches):
-            title,crn,subj,course_num,section=m.groups()
-            block=text[m.end():matches[i+1].start() if i+1<len(matches) else len(text)]
-            lines=[clean(x) for x in block.splitlines() if clean(x)]
-            interesting=[x for x in lines if re.search(r"instructor|primary|\(P\)|assigned|staff",x,re.I)]
-            sections.append({"section":section,"crn":crn,"title":clean(title),
-                             "instructorLikeLines":interesting[:20],"rawPreview":lines[:80]})
-        return jsonify(source="UVU public Banner",semester=semester,bannerTermCode=term,
-                       course=q,sectionCount=len(sections),sections=sections)
-    except Exception as e:
-        return jsonify(error=str(e),semester=semester,course=q),502
 
 @app.get("/api/uvu/course")
 def course():
