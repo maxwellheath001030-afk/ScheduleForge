@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v3.7</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.0</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -84,7 +84,8 @@
 <section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, add the activities that matter to you, and compare schedules that fit the rest of your life.</p></div><div class="metric"><small id="bestMetricLabel">BEST RESULT</small><strong id="bestMetric">—</strong><span id="bestMetricSub">schedule fit</span></div></section>
 <div class="layout">
 <aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
-<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">Generate / Recalculate schedules</button>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button>
+<div id="loadedSummary" class="loaded-summary"></div>
 <div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
 <div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity">+</button></div>
@@ -102,7 +103,7 @@
 <option value="work">Best for work</option>
 </select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
 
-<p class="note" id="dataNote">Load your courses from UVU once. After that, change activities, allowed class times, commute, or optimization settings and press Generate / Recalculate schedules. UVU is only contacted again if you change the course list or choose to reload it.</p></aside>
+<p class="note" id="dataNote">Build your course list, load sections once, then tune the rest of your week without waiting on UVU again.</p></aside>
 <section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><b id="shown"></b></div><div id="calendar"></div><div id="results"></div></section>
 </div></main>
 <script>
@@ -301,7 +302,7 @@ async function loadLiveCourses(){
     $('#calendar').innerHTML='';
     $('#bestMetric').textContent='—';
   }finally{
-    loading=false; btn.disabled=false; btn.textContent='Load classes from UVU';
+    loading=false; btn.disabled=false; btn.textContent='① Load classes from UVU';
   }
 }
 function renderActivities(){
@@ -353,13 +354,36 @@ function renderAvailability(){
   document.querySelectorAll('.daywin button').forEach(b=>b.onclick=()=>{let d=b.dataset.day;windows[d].enabled=!windows[d].enabled;renderAvailability();markNeedsRecalc()});
   document.querySelectorAll('.daywin input').forEach(i=>i.onchange=()=>{windows[i.dataset.day][i.dataset.k]=tval(i.value);markNeedsRecalc()});
 }
+function loadedSectionCount(){
+  return Object.values(DATA||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0);
+}
+function updateLoadedSummary(){
+  let el=$('#loadedSummary');
+  if(!el)return;
+  if(liveReady){
+    el.style.display='block';
+    el.textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${loadedSectionCount()} sections loaded`;
+  }else{
+    el.style.display='none';
+  }
+}
+function resultReasons(m){
+  let r=[];
+  if(m.activityScore!=null) r.push(`${m.activityScore} activit${m.activityScore===1?'y':'ies'} fit`);
+  if(m.campusDays!=null) r.push(`${m.campusDays} campus day${m.campusDays===1?'':'s'}`);
+  if(m.early===0) r.push('No early classes');
+  if(m.gaps===0) r.push('No class gaps');
+  if(m.longestFree>=120) r.push(`${(m.longestFree/60).toFixed(1)}h longest free block`);
+  return r.slice(0,4);
+}
 function markNeedsRecalc(){
   if(liveReady){
-    $('#loadStatus').textContent='Preferences changed — press Generate / Recalculate schedules to update the results.';
+    $('#loadStatus').textContent='Preferences changed — press ② Generate schedules to update the results.';
     $('#recalculateBtn').style.background='#fff0df';
   }
 }
 function render(){
+  updateLoadedSummary();
   $('#tags').innerHTML=courses.map(c=>`<button class="tag" data-c="${esc(c)}">${esc(c)} ×</button>`).join('');
   document.querySelectorAll('.tag').forEach(b=>b.onclick=()=>{
     courses=courses.filter(c=>c!==b.dataset.c);selected=0;
@@ -373,7 +397,7 @@ function render(){
   updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
   let a=rs[selected];
-  $('#calendar').innerHTML=a?`<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.free.toFixed(1)} free hrs · ${a.campus} campus days · ${a.activityFits}/${activities.length} activities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${[
+  $('#calendar').innerHTML=a?`${resultReasons(a.m).length?`<div class="result-reasons">${resultReasons(a.m).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.free.toFixed(1)} free hrs · ${a.campus} campus days · ${a.activityFits}/${activities.length} activities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${[
   ...a.s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>({kind:'class',start:m.start,end:m.end,x,m}))),
   ...placedActivitiesForDay(a.s,d).map(p=>({kind:'activity',start:p.start,end:p.end,p}))
 ].sort((u,v)=>u.start-v.start||u.end-v.end).map(item=>item.kind==='class'
@@ -424,7 +448,7 @@ $('#recalculateBtn').onclick=()=>{
   }
   selected=0;
   render();
-  $('#loadStatus').textContent='Schedules recalculated using the classes already loaded — no UVU reload needed.';
+  $('#loadStatus').textContent='Schedules updated instantly using the classes already loaded — no UVU reload needed.';
   $('#recalculateBtn').style.background='white';
 };
 $('#commute').oninput=e=>{$('#commuteVal').textContent=e.target.value+' minutes';markNeedsRecalc()};
