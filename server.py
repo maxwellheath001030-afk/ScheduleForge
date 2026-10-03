@@ -275,5 +275,26 @@ def course():
     except Exception as e:
         return jsonify(error=str(e),semester=semester,sourceUrl=url),502
 
+@app.get("/api/uvu/validate")
+def validate_course():
+    course = (request.args.get("course") or "").strip().upper()
+    m = re.fullmatch(r"([A-Z]{2,6})\s*([0-9]{3,4}[A-Z]?)", course)
+    if not m:
+        return jsonify({"ok": True, "status": "invalid_course", "course": course, "suggestions": []})
+    subj, num = m.groups()
+    try:
+        url = f"https://catalog.uvu.edu/courses/{subj.lower()}/"
+        r = requests.get(url, timeout=15, headers={"User-Agent": UA})
+        r.raise_for_status()
+        text = BeautifulSoup(r.text, "html.parser").get_text(" ", strip=True).upper()
+        exact = re.search(rf"\b{re.escape(subj)}\s+{re.escape(num)}\b", text) is not None
+        base_num = re.sub(r"[A-Z]$", "", num)
+        suggestions = sorted(set(re.findall(rf"\b{re.escape(subj)}\s+{re.escape(base_num)}[A-Z]\b", text)))
+        if exact:
+            return jsonify({"ok": True, "status": "valid", "course": f"{subj} {num}", "suggestions": suggestions})
+        return jsonify({"ok": True, "status": "invalid_course", "course": f"{subj} {num}", "suggestions": suggestions[:8]})
+    except Exception as e:
+        return jsonify({"ok": False, "status": "unverified", "course": course, "error": str(e)}), 502
+
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), debug=False)
