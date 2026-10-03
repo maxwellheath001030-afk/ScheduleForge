@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, jsonify, send_from_directory
-import re, requests
+import re, requests, time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
 from urllib.parse import urlencode, quote_plus
 
@@ -74,48 +75,30 @@ def parse_meetings(text):
     return meetings
 
 
-def fetch_seat_info(term,row):
-    crn=row.get("crn")
-    if not crn:
-        return None
-    url=f"https://userve.uvu.edu/ssb/bwckschd.p_disp_detail_sched?crn_in={crn}&term_in={term}"
+SEAT_CACHE={}
+SEAT_CACHE_TTL=300
+
+def seat_detail(term,crn):
+    key=(term,str(crn))
+    cached=SEAT_CACHE.get(key)
+    now=time.time()
+    if cached and now-cached["at"] < SEAT_CACHE_TTL:
+        return cached["data"]
+    url=BASE+DETAIL+"?"+urlencode({"crn_in":crn,"term_in":term})
     try:
-        r=requests.get(
-            url,
-            timeout=(3,5),
-            headers={"User-Agent":"ScheduleForge/1.6 UVU public class search"}
-        )
+        r=requests.get(url,timeout=(2.5,4.0),headers={"User-Agent":"ScheduleForge/1.7 UVU public class search"})
         r.raise_for_status()
         text=clean(BeautifulSoup(r.text,"html.parser").get_text(" ",strip=True))
-        # Detail page: Registration Availability / Capacity Actual Remaining / Seats C A R
-        m=re.search(r"Seats\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I)
+        m=re.search(r"Registration Availability.*?Capacity\s+Actual\s+Remaining\s+Seats\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I|re.S)
         if not m:
-            return None
-        capacity,actual,remaining=map(int,m.groups())
-        return {
-            "capacity":capacity,
-            "enrolled":actual,
-            "seatsAvailable":remaining,
-            "seatStatus":"available" if remaining>0 else "full"
-        }
+            return {"crn":str(crn),"status":"unknown"}
+        capacity,enrolled,remaining=map(int,m.groups())
+        data={"crn":str(crn),"capacity":capacity,"enrolled":enrolled,
+              "seatsAvailable":remaining,"status":"available" if remaining>0 else "full"}
+        SEAT_CACHE[key]={"at":now,"data":data}
+        return data
     except requests.RequestException:
-        return None
-
-def add_seat_info_parallel(term,rows):
-    if not rows:
-        return rows
-    workers=min(10,len(rows))
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures={pool.submit(fetch_seat_info,term,row):row for row in rows}
-        for future in as_completed(futures):
-            row=futures[future]
-            try:
-                seat=future.result()
-            except Exception:
-                seat=None
-            if seat:
-                row.update(seat)
-    return rows
+        return {"crn":str(crn),"status":"unknown"}
 
 def parse_listing_seats(block):
     # UVU class-search listing wording: "X of Y seats ..." where X is seats remaining.
@@ -374,9 +357,6 @@ def course():
         # Do not fetch every section's Banner detail page here. Some UVU detail
         # pages are slow enough to exceed Render/Gunicorn request limits.
         # The listing parser already provides the schedule-critical fields.
-        # Seat availability is not present in the legacy listing response.
-        # Fetch only registration availability from CRN detail pages, concurrently.
-        rows=add_seat_info_parallel(term,rows)
         for row in rows:
             row.setdefault("seatStatus","unknown")
             row.setdefault("seatsAvailable",None)
@@ -388,6 +368,33 @@ def course():
         return jsonify(source="UVU public Banner",semester=semester,associatedTerm=actual,course=q,sections=rows)
     except Exception as e:
         return jsonify(error=str(e),semester=semester,sourceUrl=url),502
+
+
+@app.get("/api/uvu/seats")
+def seats():
+    term=(request.args.get("term") or "").strip()
+    semester=(request.args.get("semester") or "Spring 2027").strip()
+    crns=[x.strip() for x in (request.args.get("crns") or "").split(",") if x.strip().isdigit()]
+    crns=list(dict.fromkeys(crns))[:60]
+    if not term:
+        resolved=resolve_live_term(semester)
+        if not resolved.get("verified"):
+            return jsonify(seats=[],error="Term could not be verified"),200
+        term=resolved["code"]
+    if not crns:
+        return jsonify(seats=[]),200
+
+    results=[]
+    # This endpoint is deliberately isolated from /api/uvu/course:
+    # seat failures can never make class loading fail.
+    with ThreadPoolExecutor(max_workers=min(6,len(crns))) as pool:
+        futures=[pool.submit(seat_detail,term,crn) for crn in crns]
+        for f in as_completed(futures):
+            try:
+                results.append(f.result())
+            except Exception:
+                pass
+    return jsonify(term=term,seats=results,cacheSeconds=SEAT_CACHE_TTL),200
 
 
 @app.get("/api/uvu/course-search")

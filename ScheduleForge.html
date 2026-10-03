@@ -65,7 +65,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.15.1</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.17</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -340,6 +340,30 @@ function showCourseLoadError(info){
   $('#calendar').innerHTML='';
   $('#bestMetric').textContent='—';
 }
+
+async function refreshSeatAvailability(term){
+  const crns=[...new Set(DATA.map(x=>x.crn).filter(Boolean))];
+  if(!crns.length)return;
+  try{
+    const r=await fetch(`/api/uvu/seats?semester=${encodeURIComponent(term)}&crns=${encodeURIComponent(crns.join(','))}`,{cache:'no-store'});
+    const j=await safeJsonResponse(r,'UVU seats');
+    if(!r.ok)return;
+    const byCrn=new Map((j.seats||[]).map(x=>[String(x.crn),x]));
+    let changed=false;
+    DATA.forEach(x=>{
+      const seat=byCrn.get(String(x.crn));
+      if(!seat || seat.status==='unknown')return;
+      x.seatsAvailable=Number.isFinite(Number(seat.seatsAvailable))?Number(seat.seatsAvailable):null;
+      x.capacity=Number.isFinite(Number(seat.capacity))?Number(seat.capacity):null;
+      x.enrolled=Number.isFinite(Number(seat.enrolled))?Number(seat.enrolled):null;
+      changed=true;
+    });
+    if(changed)render();
+  }catch(_err){
+    // Seat availability is optional enrichment. Never break the schedule UI.
+  }
+}
+
 async function loadLiveCourses(){
   if(loading)return;
   if(!courses.length){alert('Add at least one course first.');return}
@@ -386,6 +410,9 @@ async function loadLiveCourses(){
     $('#dataStatus').textContent=`${term.toUpperCase()} · ${DATA.length} LIVE SECTIONS`;
     $('#dataNote').textContent=`Live UVU data loaded for ${courses.join(', ')}. Use Generate / Recalculate after changing preferences.`;
     render();
+    // Load seat counts independently. A slow/failed UVU seat request cannot
+    // make the already-loaded schedules fail.
+    refreshSeatAvailability(term);
   }catch(err){
     DATA=all; liveReady=false;
     const info={
