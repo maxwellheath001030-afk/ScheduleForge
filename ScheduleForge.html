@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.8</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.8.1</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -285,7 +285,7 @@ async function safeJsonResponse(r,label='UVU'){
   if(!ct.includes('application/json')){
     throw new Error(`${label} service returned an unexpected response. Please try again in a moment.`);
   }
-  return await safeJsonResponse(r,'Course validation');
+  return await r.json();
 }
 async function validateCourseCode(c){
   try{
