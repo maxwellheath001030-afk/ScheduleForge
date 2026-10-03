@@ -76,7 +76,7 @@
 <section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, set when you can work, and compare conflict-free schedules automatically.</p></div><div class="metric"><small>BEST RESULT</small><strong id="bestMetric">—</strong><span>potential work hours / week</span></div></section>
 <div class="layout">
 <aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
-<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#166b45;color:white;font-weight:800;cursor:pointer">Generate live UVU schedules</button><div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#166b45;color:white;font-weight:800;cursor:pointer">Generate live UVU schedules</button><div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Work availability</label><div class="availability" id="availability"></div>
 <label>Campus → work commute</label><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div>
 <label>Minimum useful work block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
@@ -102,6 +102,14 @@ const fmt=m=>{let h=Math.floor(m/60),mm=m%60,a=h>=12?'PM':'AM';h=h%12||12;return
 const tin=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const tval=s=>{let [h,m]=s.split(':').map(Number);return h*60+m};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function normalizeCourseInput(value){
+  let raw=String(value||'').trim().toUpperCase();
+  // Accept ME3335, me 3335, ME-3335, ME_3335, ME   3335, etc.
+  raw=raw.replace(/[_-]+/g,' ').replace(/\s+/g,' ');
+  let compact=raw.replace(/\s+/g,'');
+  let m=compact.match(/^([A-Z]{2,8})(\d{3,5}[A-Z]?)$/);
+  return m?`${m[1]} ${m[2]}`:null;
+}
 
 function clash(a,b){
   return a.meetings.some(x=>b.meetings.some(y=>x.days.some(d=>y.days.includes(d))&&x.start<y.end&&y.start<x.end));
@@ -211,7 +219,7 @@ async function loadLiveCourses(){
     if(!ok)throw new Error('UVU term could not be verified.');
     let all=[];
     for(let i=0;i<courses.length;i++){
-      const c=courses[i];
+      const c=normalizeCourseInput(courses[i])||courses[i];
       $('#loadStatus').textContent=`Loading ${c} from UVU… (${i+1}/${courses.length})`;
       const r=await fetch(`/api/uvu/course?semester=${encodeURIComponent(term)}&course=${encodeURIComponent(c)}`,{cache:'no-store'});
       const j=await r.json();
@@ -261,9 +269,24 @@ function render(){
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
 }
 $('#addCourse').onclick=()=>{
-  let i=$('#courseInput'),c=i.value.trim().toUpperCase().replace(/\s+/g,' ');
-  if(c&&!courses.includes(c)){courses.push(c);liveReady=false;DATA=[];$('#loadStatus').textContent='Course list changed — generate to pull UVU sections.'}
-  i.value='';selected=0;render();
+  let i=$('#courseInput');
+  let c=normalizeCourseInput(i.value);
+  if(!c){
+    $('#loadStatus').textContent='Course not recognized. Try something like ME 3335, ME3335, or me-3335.';
+    i.focus();
+    return;
+  }
+  if(!courses.includes(c)){
+    courses.push(c);
+    liveReady=false;
+    DATA=[];
+    $('#loadStatus').textContent=`Added ${c}. Generate to pull its live UVU sections.`;
+  }else{
+    $('#loadStatus').textContent=`${c} is already in your course list.`;
+  }
+  i.value='';
+  selected=0;
+  render();
 };
 $('#courseInput').onkeydown=e=>{if(e.key==='Enter')$('#addCourse').click()};
 $('#generateBtn').onclick=loadLiveCourses;
