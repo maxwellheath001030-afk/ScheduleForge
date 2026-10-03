@@ -62,10 +62,16 @@
 .activityGrid select,.activityGrid input{width:100%;padding:6px;border:1px solid #ddd2c7;border-radius:6px;font-size:10px}
 .activityDays{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}.activityDays button{border:0;border-radius:6px;padding:5px 7px;font-size:9px;font-weight:800;background:#eee;color:#777;cursor:pointer}.activityDays button.on{background:#fff0df;color:#b94e08}
 @media(max-width:600px){.activityGrid{grid-template-columns:1fr}.activityDays button{padding:7px 9px}}
+
+.quickPresets{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 8px}
+.quickPresets button{border:1px solid #ddcfc2;background:#fff;color:#8a4a20;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:750;cursor:pointer}
+.quickPresets button:hover{background:#fff5ed}
+.activityHint{font-size:10px;color:#82776e;line-height:1.35;margin:4px 0 8px}
+.daywin select{min-width:92px;padding:6px 5px;border:1px solid #ddcfc2;border-radius:7px;background:#fff;font-size:11px}
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.17</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -94,9 +100,13 @@
 <div id="loadedSummary" class="loaded-summary"></div>
 <div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
-<div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity">+</button></div>
+<div class="activityHint">Add the things you want ScheduleForge to leave room for. <b>Must fit</b> acts as a hard requirement; <b>Prefer</b> improves ranking; <b>Flexible</b> is a light preference.</div>
+<div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity">+ Add</button></div>
 <div id="activityEditor" style="margin-top:8px"></div>
-<label>Allowed class days & times</label><div style="font-size:10px;color:#82776e;line-height:1.4;margin:-2px 0 7px">Click a day to disable it completely. Schedules with classes on disabled days will be excluded.</div><div class="availability" id="availability"></div>
+<label>Allowed class days & times</label>
+<div class="activityHint">These are hard limits. Classes outside these times are excluded.</div>
+<div class="quickPresets"><button type="button" data-preset="any">Any time</button><button type="button" data-preset="nomorning">No mornings</button><button type="button" data-preset="noevening">No evenings</button><button type="button" data-preset="weekday">8 AM–5 PM</button></div>
+<div class="availability" id="availability"></div>
 <label>Campus → work commute</label><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div>
 <label>Minimum useful free-time block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
 <label>Optimize for</label><select id="mode">
@@ -183,7 +193,8 @@ function sectionAllowed(sec){
   }));
 }
 function scheduleAllowed(schedule){
-  return schedule.every(sectionAllowed);
+  if(!schedule.every(sectionAllowed))return false;
+  return activities.filter(a=>a.priority==='important').every(a=>activityFit(schedule,a).fits);
 }
 function dailyFreeBlocks(s,d){
   let commute=+$('#commute').value, minShift=+$('#minShift').value, w=windows[d];
@@ -429,7 +440,7 @@ function renderActivities(){
   $('#activityEditor').innerHTML=activities.length?activities.map(a=>`<div class="activityCard" data-id="${a.id}">
     <div class="activityTop"><b>${esc(a.type)}</b><button class="removeActivity" data-id="${a.id}">×</button></div>
     <div class="activityGrid">
-      <select class="activityPriority" data-id="${a.id}"><option value="flexible" ${a.priority==='flexible'?'selected':''}>Flexible</option><option value="preferred" ${a.priority==='preferred'?'selected':''}>Preferred</option><option value="important" ${a.priority==='important'?'selected':''}>Important</option></select>
+      <select class="activityPriority" data-id="${a.id}"><option value="flexible" ${a.priority==='flexible'?'selected':''}>Flexible</option><option value="preferred" ${a.priority==='preferred'?'selected':''}>Prefer</option><option value="important" ${a.priority==='important'?'selected':''}>Must fit</option></select>
       <select class="activityDuration" data-id="${a.id}">${[30,45,60,90,120,180,240].map(n=>`<option value="${n}" ${+a.duration===n?'selected':''}>${n<60?n+' min':(n/60)+' hr'}</option>`).join('')}</select>
     </div>
     <div class="activityDays">${D.map(d=>`<button class="${a.days.includes(d)?'on':''}" data-id="${a.id}" data-day="${d}">${DN[d]}</button>`).join('')}</div>
@@ -506,11 +517,35 @@ function updateBestMetric(r){
   }
   $('#bestMetricLabel').textContent=label;$('#bestMetric').textContent=value;$('#bestMetricSub').textContent=sub;
 }
-function renderAvailability(){
-  $('#availability').innerHTML=D.map(d=>`<div class="daywin"><button data-day="${d}" class="${windows[d].enabled?'':'off'}">${DN[d]}</button><input data-day="${d}" data-k="start" type="time" value="${tin(windows[d].start)}" ${windows[d].enabled?'':'disabled'}><span>–</span><input data-day="${d}" data-k="end" type="time" value="${tin(windows[d].end)}" ${windows[d].enabled?'':'disabled'}></div>`).join('');
-  document.querySelectorAll('.daywin button').forEach(b=>b.onclick=()=>{let d=b.dataset.day;windows[d].enabled=!windows[d].enabled;renderAvailability();markNeedsRecalc()});
-  document.querySelectorAll('.daywin input').forEach(i=>i.onchange=()=>{windows[i.dataset.day][i.dataset.k]=tval(i.value);markNeedsRecalc()});
+function timeOptions(selected){
+  let out='';
+  for(let m=360;m<=1320;m+=30)out+=`<option value="${m}" ${m===selected?'selected':''}>${fmt(m)}</option>`;
+  return out;
 }
+function renderAvailability(){
+  $('#availability').innerHTML=D.map(d=>`<div class="daywin"><button data-day="${d}" class="${windows[d].enabled?'':'off'}">${DN[d]}</button><select data-day="${d}" data-k="start" ${windows[d].enabled?'':'disabled'}>${timeOptions(windows[d].start)}</select><span>–</span><select data-day="${d}" data-k="end" ${windows[d].enabled?'':'disabled'}>${timeOptions(windows[d].end)}</select></div>`).join('');
+  document.querySelectorAll('.daywin button').forEach(b=>b.onclick=()=>{let d=b.dataset.day;windows[d].enabled=!windows[d].enabled;renderAvailability();markNeedsRecalc()});
+  document.querySelectorAll('.daywin select').forEach(i=>i.onchange=()=>{
+    let d=i.dataset.day,k=i.dataset.k,v=+i.value;
+    windows[d][k]=v;
+    if(windows[d].end<=windows[d].start){
+      if(k==='start')windows[d].end=Math.min(1320,v+60);
+      else windows[d].start=Math.max(360,v-60);
+      renderAvailability();
+    }
+    markNeedsRecalc();
+  });
+}
+function applyTimePreset(name){
+  let start=360,end=1320;
+  if(name==='nomorning')start=600;
+  if(name==='noevening')end=1020;
+  if(name==='weekday'){start=480;end=1020}
+  D.forEach(d=>windows[d]={enabled:true,start,end});
+  renderAvailability();markNeedsRecalc();
+}
+
+document.querySelectorAll('.quickPresets button').forEach(b=>b.onclick=()=>applyTimePreset(b.dataset.preset));
 const STORAGE_KEY='scheduleforge-settings-v1';
 function saveSettings(){
   try{
