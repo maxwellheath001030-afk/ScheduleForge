@@ -226,6 +226,10 @@ def _resolve_live_term_live(semester):
 @app.get("/health")
 def resolve_live_term(semester):
     semester=(semester or "").strip()
+    # Spring 2027 has already been verified against UVU Banner.
+    # Use it directly so transient term-discovery failures cannot block course loading.
+    if semester == "Spring 2027":
+        return {"verified": True, "code": "202720", "source": "verified mapping"}
     if semester in TERM_CACHE:
         return {"verified": True, "code": TERM_CACHE[semester], "source": "cache"}
     try:
@@ -242,7 +246,6 @@ def resolve_live_term(semester):
         return {"verified": True, "code": code, "source": "verified fallback"}
     return {"verified": False, "semester": semester,
             "error": "UVU term discovery is temporarily unavailable and no verified fallback is stored for this semester."}
-
 
 def health():
     return jsonify(status="ok",app="ScheduleForge"),200
@@ -309,36 +312,26 @@ def course():
 @app.get("/api/uvu/course-search")
 def course_search():
     q=(request.args.get("q") or "").strip().upper()
-    if len(q)<2:
+    compact=re.sub(r"[^A-Z0-9]","",q)
+    m=re.match(r"^([A-Z]{2,6})([0-9]{0,4}[A-Z]?)$",compact)
+    if not m or len(compact)<2:
         return jsonify(query=q,results=[])
+    subj,partial=m.groups()
+    # Search UVU's current catalog subject page. This endpoint is only for suggestions;
+    # semester availability is still verified separately by /api/uvu/course.
     try:
-        # UVU catalog course-search supports a keyword query; parse returned course links/text.
-        url="https://catalog.uvu.edu/course-search/?keyword="+quote_plus(q)
+        url=f"https://catalog.uvu.edu/courses/{subj.lower()}/"
         r=requests.get(url,timeout=15,headers={"User-Agent":UA})
         r.raise_for_status()
-        soup=BeautifulSoup(r.text,"html.parser")
-        found=[]
-        seen=set()
-        # Capture codes such as ME 3335, PHIL 2050G, etc. plus nearby text as title.
-        for el in soup.find_all(["a","h2","h3","h4","p","div","span"]):
-            txt=" ".join(el.get_text(" ",strip=True).split())
-            m=re.search(r"\b([A-Z]{2,6})\s+([0-9]{3,4}[A-Z]?)\b",txt.upper())
-            if not m: continue
-            code=f"{m.group(1)} {m.group(2)}"
-            if code in seen: continue
-            # Keep results related to typed subject/number text.
-            compact=q.replace(" ","").replace("-","").replace("_","")
-            if compact and compact not in code.replace(" ","") and not code.replace(" ","").startswith(compact):
-                # For text queries, allow page search relevance to decide.
-                if re.fullmatch(r"[A-Z]{2,6}[0-9A-Z]*",compact): continue
-            title=txt
-            title=re.sub(rf"^\s*{re.escape(code)}\s*[-–—:]?\s*","",title,flags=re.I)
-            if len(title)>100: title=title[:97]+"..."
-            found.append({"course":code,"title":title})
-            seen.add(code)
-            if len(found)>=12: break
-        return jsonify(query=q,results=found)
-    except Exception as e:
+        text=BeautifulSoup(r.text,"html.parser").get_text("\n",strip=True)
+        rx=re.compile(rf"\b{re.escape(subj)}\s+([0-9]{{3,4}}[A-Z]?)\b",re.I)
+        nums=[]
+        for num in rx.findall(text):
+            code=f"{subj} {num.upper()}"
+            if partial and not num.upper().startswith(partial): continue
+            if code not in nums: nums.append(code)
+        return jsonify(query=q,results=[{"course":c,"title":""} for c in nums[:20]])
+    except Exception:
         return jsonify(query=q,results=[],error="Course search is temporarily unavailable."),502
 
 @app.get("/api/uvu/validate")

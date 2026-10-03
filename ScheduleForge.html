@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.5</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.7</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -482,13 +482,14 @@ async function updateCourseSuggestions(){
   const input=$('#courseInput'),box=$('#courseSuggestions');
   const raw=input.value.trim();
   if(raw.length<2){box.classList.remove('show');box.innerHTML='';return}
+  box.innerHTML='<div style="padding:10px;font-size:10px;color:#81766d">Searching UVU courses…</div>';box.classList.add('show');
   if(courseSearchAbort)courseSearchAbort.abort();
   courseSearchAbort=new AbortController();
   try{
     const r=await fetch(`/api/uvu/course-search?q=${encodeURIComponent(raw)}`,{signal:courseSearchAbort.signal});
     const j=await safeJsonResponse(r,'Course search');
     const rows=j.results||[];
-    if(!rows.length){box.innerHTML='<div style="padding:10px;font-size:10px;color:#81766d">No matching UVU courses found</div>';box.classList.add('show');return}
+    if(!rows.length){box.innerHTML='<div style="padding:10px;font-size:10px;color:#81766d">No matching course codes found — keep typing or check the subject abbreviation</div>';box.classList.add('show');return}
     box.innerHTML=rows.map(x=>`<button type="button" class="course-suggestion" data-course="${esc(x.course)}"><b>${esc(x.course)}</b>${x.title?`<span>${esc(x.title)}</span>`:''}</button>`).join('');
     box.classList.add('show');
     box.querySelectorAll('.course-suggestion').forEach(b=>b.onclick=()=>{
