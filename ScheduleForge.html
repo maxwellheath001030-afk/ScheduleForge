@@ -68,10 +68,23 @@
 .quickPresets button:hover{background:#fff5ed}
 .activityHint{font-size:10px;color:#82776e;line-height:1.35;margin:4px 0 8px}
 .daywin select{min-width:92px;padding:6px 5px;border:1px solid #ddcfc2;border-radius:7px;background:#fff;font-size:11px}
+
+.add #addActivity{
+  width:auto;
+  min-width:76px;
+  padding:0 14px;
+  white-space:nowrap;
+  font-size:13px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+}
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.2</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -101,7 +114,7 @@
 <div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
 <div class="activityHint">Add the things you want ScheduleForge to leave room for. <b>Must fit</b> acts as a hard requirement; <b>Prefer</b> improves ranking; <b>Flexible</b> is a light preference.</div>
-<div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity">+ Add</button></div>
+<div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity"><span>+</span><span>Add</span></button></div>
 <div id="activityEditor" style="margin-top:8px"></div>
 <label>Allowed class days & times</label>
 <div class="activityHint">These are hard limits. Classes outside these times are excluded.</div>
@@ -426,10 +439,17 @@ async function loadLiveCourses(){
     refreshSeatAvailability(term);
   }catch(err){
     DATA=all; liveReady=false;
-    const info={
-      title:'We couldn’t finish loading your classes',
-      detail:'UVU returned an unexpected response. Please try again in a moment.'
-    };
+    const info=err?.kind==='no_regular_sections'
+      ?{
+          title:`${err.course} has no regular UVU sections for ${term}`,
+          detail:err.excludedHighSchool
+            ?`UVU lists ${err.excludedHighSchool} high-school/concurrent-enrollment section${err.excludedHighSchool===1?'':'s'}, which ScheduleForge excludes for regular university scheduling.`
+            :`The course is valid, but ScheduleForge did not find a regular schedulable UVU section for ${term}.`
+        }
+      :{
+          title:'We couldn’t finish loading your classes',
+          detail:'UVU returned an unexpected response. Please try again in a moment.'
+        };
     $('#loadStatus').textContent=info.title+'.';
     showCourseLoadError(info);
   }finally{
