@@ -125,18 +125,15 @@ def is_high_school_section(row):
         str(m.get("location") or "") for m in row.get("meetings",[])
     ).upper()
 
-    # UVU Academic Scheduling documents HSCE sections using H__/J__ section
-    # conventions and Utah high-school locations. Location text varies by school.
-    if re.match(r"^[HJ][A-Z0-9]{2}$",section):
-        return True
+    # Exclude only when the parsed meeting location itself identifies a
+    # high-school / concurrent-enrollment site. Do not infer HSCE from section
+    # number or from a missing instructor.
     hs_markers=(
         "HIGH SCHOOL"," HS "," H.S.","ACADEMY","CHARTER","SCHOOL DISTRICT",
         "TECHNICAL CENTER","TECH CENTER"
     )
     padded=f" {locations} "
-    if any(marker in padded for marker in hs_markers):
-        return True
-    return False
+    return any(marker in padded for marker in hs_markers)
 
 def parse_listing(html,subject,course,semester):
     soup=BeautifulSoup(html,"html.parser"); text=soup.get_text("\n",strip=True)
@@ -367,25 +364,20 @@ def course():
         # concurrent-enrollment offerings from the regular student optimizer.
         parsed_count=len(rows)
         hs_count=sum(1 for row in rows if is_high_school_section(row))
-        rows=[
-            row for row in rows
-            if not is_high_school_section(row)
-            and row.get("meetings")
-            and all(
-                m.get("start") is not None
+        kept=[]
+        for row in rows:
+            if is_high_school_section(row):
+                continue
+            timed=[
+                m for m in row.get("meetings",[])
+                if m.get("start") is not None
                 and m.get("end") is not None
                 and m.get("days")
-                for m in row.get("meetings",[])
-            )
-        ]
-
-        # Some HSCE listings do not expose a recognizable high-school location in
-        # the legacy page. If every remaining section has no instructor, do not
-        # silently call the course invalid; return a valid empty result so the
-        # frontend can explain that no regular UVU sections were found.
-        if rows and all(not row.get("primaryInstructor") for row in rows):
-            hs_count += len(rows)
-            rows=[]
+            ]
+            if timed:
+                row["meetings"]=timed
+                kept.append(row)
+        rows=kept
 
         # Do not fetch every section's Banner detail page here. Some UVU detail
         # pages are slow enough to exceed Render/Gunicorn request limits.
