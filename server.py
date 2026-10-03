@@ -17,7 +17,7 @@ TERM_ENDPOINTS=[
 def clean(s): return re.sub(r"\s+"," ",s or "").strip()
 
 def get(url):
-    r=requests.get(url,timeout=25,headers={"User-Agent":"ScheduleForge/1.5 UVU public class search"})
+    r=requests.get(url,timeout=(5,8),headers={"User-Agent":"ScheduleForge/1.5 UVU public class search"})
     r.raise_for_status()
     return r.text
 
@@ -95,7 +95,7 @@ def parse_listing(html,subject,course,semester):
             "scheduleType":schedule_type,"delivery":schedule_type,"meetings":parse_meetings(block),
             "capacity":None,"enrolled":None,"seatsAvailable":None,
             "waitlistCapacity":None,"waitlistEnrolled":None,"waitlistAvailable":None,
-            "linkedSections":[],"prerequisites":"","seatStatus":"unknown"
+            "linkedSections":[],"seatStatus":"unknown"
         })
     return actual,rows
 
@@ -115,8 +115,6 @@ def enrich(term,row):
     if row["credits"] is None: row["credits"]=parse_credits(text)
     if not row["scheduleType"]:
         row["scheduleType"]=parse_schedule_type(text); row["delivery"]=row["scheduleType"]
-    prereq=re.search(r"Prerequisites?\s*:?\s*(.+?)(?=Corequisites?|Restrictions?|Mutual Exclusion|$)",text,re.I)
-    if prereq: row["prerequisites"]=clean(prereq.group(1))
     linked=re.findall(r"(?:Linked|Cross[- ]?List(?:ed)?)\s+(?:Section|CRN).*?(\d{4,6})",text,re.I)
     row["linkedSections"]=list(dict.fromkeys(linked))
     return row
@@ -300,7 +298,14 @@ def course():
             return jsonify(error="UVU response contained no parsed sections. This is treated as unverified, not as zero offerings.",
                            semester=semester,associatedTerm=actual,sourceUrl=url),502
         for row in rows:
-            try: enrich(term,row)
+            try:
+                enrich(term,row)
+            except requests.exceptions.Timeout:
+                row["seatStatus"]="unavailable"
+                row["enrichmentError"]="UVU detail request timed out"
+            except requests.exceptions.RequestException as e:
+                row["seatStatus"]="unavailable"
+                row["enrichmentError"]="UVU detail request failed"
             except Exception as e:
                 row["seatStatus"]="unavailable"
                 row["enrichmentError"]=str(e)
