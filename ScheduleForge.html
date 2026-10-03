@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f5f7f8;color:#17231d;font-family:Arial,sans-serif}header{height:70px;background:#fff;border-bottom:1px solid #dfe6e2;display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;color:#738078;font-weight:500}.pill{background:#e9f3ed;color:#24583e;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:700}main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:end;margin-bottom:28px}.hero h1{font-size:44px;line-height:1.05;margin:8px 0}.hero h1 span{color:#16764d}.hero p{color:#65726b;line-height:1.55}.eyebrow{font-size:11px;font-weight:800;color:#16764d;letter-spacing:.08em}.metric{background:#173c2b;color:white;border-radius:17px;padding:22px}.metric small{font-size:10px;color:#bdd3c7}.metric strong{display:block;font-size:36px;margin:7px 0}.metric span{font-size:11px;color:#bdd3c7}.layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.panel{background:white;border:1px solid #dfe6e2;border-radius:16px;padding:22px}aside{position:sticky;top:15px}h2{margin:0 0 17px;font-size:21px}label{display:block;font-size:12px;font-weight:700;color:#506058;margin:17px 0 7px}.add{display:flex;gap:7px}.add input,select{width:100%;padding:10px;border:1px solid #d3ddd7;border-radius:8px;background:white}.add button{width:42px;border:0;border-radius:8px;background:#166b45;color:white;font-size:20px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{border:0;border-radius:7px;background:#eef4f0;color:#28503d;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer}.availability{display:flex;flex-direction:column;gap:6px}.daywin{display:grid;grid-template-columns:40px 1fr 10px 1fr;gap:5px;align-items:center}.daywin button{border:0;border-radius:7px;padding:8px 3px;font-size:10px;font-weight:800;background:#e5f2ea;color:#166b45}.daywin button.off{background:#eee;color:#999}.daywin input{min-width:0;width:100%;padding:6px 2px;border:1px solid #d3ddd7;border-radius:6px;font-size:10px}.range{width:100%;accent-color:#166b45}.rangeval{text-align:right;color:#166b45;font-size:11px;font-weight:700}.note{font-size:11px;line-height:1.55;color:#89958f;margin-top:18px}.resultHead{display:flex;justify-content:space-between;border-bottom:1px solid #e9eeeb;padding-bottom:14px}.resultHead small{font-size:10px;color:#75827b;letter-spacing:.1em}.calendar{border:1px solid #dfe7e2;border-radius:13px;margin:16px 0;overflow:hidden}.calTitle{background:#173c2b;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;font-size:12px}.week{display:grid;grid-template-columns:repeat(5,1fr);min-height:150px}.daycol{padding:9px 6px;border-right:1px solid #e5ebe7}.daycol:last-child{border:0}.daycol>b{font-size:10px;color:#68776f}.event{margin-top:7px;background:#e7f2eb;border-left:3px solid #227b53;border-radius:5px;padding:6px}.event strong,.event span,.event small{display:block;font-size:9px}.event strong{font-size:10px}.event span,.event small{color:#617068;margin-top:2px}.result{border:1px solid #dfe6e2;border-radius:13px;margin-top:13px;overflow:hidden;cursor:pointer}.result:hover{box-shadow:0 5px 16px #173c2b14}.result.best{border:2px solid #238158}.rank{padding:10px 13px;background:#f8faf9;display:flex;justify-content:space-between;font-weight:800}.rank b{font-size:9px;color:#166b45}.stats{display:flex;gap:28px;padding:14px;border-bottom:1px solid #edf0ee}.stats strong{display:block;font-size:22px;color:#174e35}.stats span{font-size:10px;color:#7d8983}.classes{padding:5px 14px 10px}.classrow{display:grid;grid-template-columns:95px 60px 1fr;padding:7px 0;border-bottom:1px dashed #e8ece9;font-size:11px}.classrow:last-child{border:0}.classrow span{color:#6d7973}.empty{padding:40px;text-align:center;color:#7c8882}@media(max-width:850px){.hero{grid-template-columns:1fr}.metric{display:none}.layout{grid-template-columns:1fr}aside{position:static}.week{grid-template-columns:1fr}.daycol{border-right:0;border-bottom:1px solid #e5ebe7}.hero h1{font-size:34px}}
 
-.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.badge{font-size:8px;font-weight:800;padding:3px 6px;border-radius:10px;background:#eef3f0;color:#53645b}.badge.open{background:#e1f4e8;color:#17683f}.badge.closed{background:#f5e7e7;color:#8b3939}.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:7px}.checkline{display:flex;gap:8px;align-items:center;font-size:11px;color:#53645b;margin-top:10px}.checkline input{accent-color:#166b45}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.badge{font-size:8px;font-weight:800;padding:3px 6px;border-radius:10px;background:#eef3f0;color:#53645b}.badge.open{background:#e1f4e8;color:#17683f}.rmpLink{font-size:8px;font-weight:800;padding:3px 6px;border-radius:10px;background:#e8eef8;color:#315a8f;text-decoration:none}.rmpLink:hover{text-decoration:underline}.badge.closed{background:#f5e7e7;color:#8b3939}.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:7px}.checkline{display:flex;gap:8px;align-items:center;font-size:11px;color:#53645b;margin-top:10px}.checkline input{accent-color:#166b45}
 
 @media(max-width:600px){
   body{font-size:14px}
@@ -48,10 +48,18 @@
   button,.tag,.result{touch-action:manipulation}
 }
 
+
+.activityCard{border:1px solid #dfe6e2;border-radius:9px;padding:9px;margin-top:7px;background:#fafcfb}
+.activityTop{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.activityTop b{font-size:11px}.activityTop button{border:0;background:transparent;color:#8b3939;cursor:pointer;font-weight:800}
+.activityGrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.activityGrid select,.activityGrid input{width:100%;padding:6px;border:1px solid #d3ddd7;border-radius:6px;font-size:10px}
+.activityDays{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}.activityDays button{border:0;border-radius:6px;padding:5px 7px;font-size:9px;font-weight:800;background:#eee;color:#777;cursor:pointer}.activityDays button.on{background:#e1f4e8;color:#17683f}
+@media(max-width:600px){.activityGrid{grid-template-columns:1fr}.activityDays button{padding:7px 9px}}
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>UVU schedule optimizer · v2.0 Live UVU</small></div>
+<header><div class="brand">▣ ScheduleForge<small>UVU life & schedule optimizer · v3.0</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -73,14 +81,25 @@
     </select>
   </div>
 </section>
-<section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, set when you can work, and compare conflict-free schedules automatically.</p></div><div class="metric"><small>BEST RESULT</small><strong id="bestMetric">—</strong><span>potential work hours / week</span></div></section>
+<section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, add the activities that matter to you, and compare schedules that fit the rest of your life.</p></div><div class="metric"><small id="bestMetricLabel">BEST RESULT</small><strong id="bestMetric">—</strong><span id="bestMetricSub">schedule fit</span></div></section>
 <div class="layout">
 <aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
 <label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#166b45;color:white;font-weight:800;cursor:pointer">Generate live UVU schedules</button><div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
-<label>Work availability</label><div class="availability" id="availability"></div>
+<label>Activities & priorities</label>
+<div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity">+</button></div>
+<div id="activityEditor" style="margin-top:8px"></div>
+<label>Usable day window</label><div class="availability" id="availability"></div>
 <label>Campus → work commute</label><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div>
-<label>Minimum useful work block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
-<label>Optimize for</label><select id="mode"><option value="work">Maximum work hours</option><option value="compact">Fewest class gaps</option><option value="days">Fewest campus days</option><option value="late">Avoid early classes</option></select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
+<label>Minimum useful free-time block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
+<label>Optimize for</label><select id="mode">
+<option value="balanced">Balanced schedule</option>
+<option value="free">Most usable free time</option>
+<option value="study">Best for study blocks</option>
+<option value="compact">Fewest class gaps</option>
+<option value="days">Fewest campus days</option>
+<option value="late">Avoid early classes</option>
+<option value="work">Best for work</option>
+</select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
 <label>Course data</label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
   <button id="importBtn" style="padding:9px;border:1px solid #cbd8d0;background:white;border-radius:8px;font-weight:700;color:#24583e;cursor:pointer">Import JSON</button>
@@ -95,6 +114,12 @@ let DATA=[];
 const D=['M','T','W','R','F'], DN={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri'}, FULL={M:'Monday',T:'Tuesday',W:'Wednesday',R:'Thursday',F:'Friday'};
 let courses=['ME 4820','ME 4180','ME 4510','ME 4010','ME 4900R','ME 3335','ME 4015'], selected=0;
 let windows=Object.fromEntries(D.map(d=>[d,{enabled:true,start:420,end:1020}]));
+let activities=[
+ {id:1,type:'Study',days:['M','T','W','R','F'],duration:120,priority:'preferred'},
+ {id:2,type:'Lunch',days:['M','T','W','R','F'],duration:45,priority:'preferred'}
+];
+let nextActivityId=3;
+
 let liveReady=false, loading=false, loadedTerm='', loadedCourses=[];
 
 const $=q=>document.querySelector(q);
@@ -110,6 +135,19 @@ function normalizeCourseInput(value){
   let m=compact.match(/^([A-Z]{2,8})(\d{3,5}[A-Z]?)$/);
   return m?`${m[1]} ${m[2]}`:null;
 }
+function hasKnownProfessor(name){
+  const n=String(name||'').trim().toUpperCase();
+  return n && n!=='TBA' && n!=='STAFF' && n!=='INSTRUCTOR TBA';
+}
+function rmpUrl(name){
+  // Utah Valley University school ID on Rate My Professors: 18458
+  return `https://www.ratemyprofessors.com/search/professors/18458?q=${encodeURIComponent(name)}`;
+}
+function professorHtml(name){
+  const p=String(name||'TBA').trim()||'TBA';
+  if(!hasKnownProfessor(p)) return `<span class="badge">${esc(p)}</span>`;
+  return `<span class="badge">${esc(p)}</span><a class="rmpLink" href="${rmpUrl(p)}" target="_blank" rel="noopener noreferrer" title="Search ${esc(p)} on Rate My Professors">Rate My Professor ↗</a>`;
+}
 
 function clash(a,b){
   return a.meetings.some(x=>b.meetings.some(y=>x.days.some(d=>y.days.includes(d))&&x.start<y.end&&y.start<x.end));
@@ -124,25 +162,40 @@ function combos(groups){
   }
   return out;
 }
-function metrics(s){
-  let work=0,gaps=0,campus=0,early=0,commute=+$('#commute').value,minShift=+$('#minShift').value;
-  for(const d of D){
-    let blocks=s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>[m.start,m.end])).sort((a,b)=>a[0]-b[0]);
-    if(blocks.length)campus++;
-    early+=blocks.filter(b=>b[0]<540).length;
-    let w=windows[d];
-    if(w.enabled){
-      let cursor=w.start;
-      for(const [st,en] of blocks){
-        let available=Math.min(w.end,st-commute)-cursor;
-        if(available>=minShift)work+=available;
-        cursor=Math.max(cursor,en+commute,w.start);
-      }
-      if(w.end-cursor>=minShift)work+=w.end-cursor;
-    }
-    for(let i=1;i<blocks.length;i++)gaps+=Math.max(0,blocks[i][0]-blocks[i-1][1]);
+function dailyFreeBlocks(s,d){
+  let commute=+$('#commute').value, minShift=+$('#minShift').value, w=windows[d];
+  if(!w.enabled)return[];
+  let classes=s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>[m.start,m.end])).sort((a,b)=>a[0]-b[0]);
+  let blocks=[],cursor=w.start;
+  for(const [st,en] of classes){
+    let stop=Math.min(w.end,st-commute);
+    if(stop-cursor>=minShift)blocks.push([cursor,stop]);
+    cursor=Math.max(cursor,en+commute,w.start);
   }
-  return{work:work/60,gaps:gaps/60,campus,early};
+  if(w.end-cursor>=minShift)blocks.push([cursor,w.end]);
+  return blocks;
+}
+function activityFit(s,a){
+  let candidates=a.days.flatMap(d=>dailyFreeBlocks(s,d).map(b=>({d,start:b[0],end:b[1],len:b[1]-b[0]})));
+  let need=+a.duration||60;
+  let fitting=candidates.filter(b=>b.len>=need);
+  return {fits:fitting.length>0,count:fitting.length,best:fitting.sort((x,y)=>y.len-x.len)[0]||null};
+}
+function metrics(s){
+  let free=0,gaps=0,campus=0,early=0,longest=0,studyBlocks=0,activityScore=0,activityFits=0,workHours=0;
+  for(const d of D){
+    let classes=s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>[m.start,m.end])).sort((a,b)=>a[0]-b[0]);
+    if(classes.length)campus++;
+    early+=classes.filter(b=>b[0]<540).length;
+    for(let i=1;i<classes.length;i++)gaps+=Math.max(0,classes[i][0]-classes[i-1][1]);
+    for(const b of dailyFreeBlocks(s,d)){free+=b[1]-b[0];longest=Math.max(longest,b[1]-b[0]);if(b[1]-b[0]>=120)studyBlocks++}
+  }
+  for(const a of activities){
+    let f=activityFit(s,a), weight=a.priority==='important'?3:a.priority==='preferred'?2:1;
+    if(f.fits){activityFits++;activityScore+=weight}
+    if(a.type==='Work'&&f.best)workHours+=Math.min(f.best.len,+a.duration||60);
+  }
+  return{free:free/60,gaps:gaps/60,campus,early,longest:longest/60,studyBlocks,activityScore,activityFits,work:workHours/60};
 }
 function getResults(){
   if(!liveReady)return[];
@@ -151,11 +204,14 @@ function getResults(){
   if(groups.some(g=>!g.length))return[];
   let mode=$('#mode').value;
   return combos(groups).map(s=>{
-    let m=metrics(s);
-    let score=mode==='work'?m.work*100-m.gaps*3-m.campus:
-              mode==='compact'?-m.gaps*100+m.work:
-              mode==='days'?-m.campus*100+m.work:
-              -m.early*100+m.work;
+    let m=metrics(s),score=0;
+    if(mode==='free')score=m.free*10+m.activityScore*8-m.campus*2;
+    else if(mode==='study')score=m.studyBlocks*30+m.longest*5+m.activityScore*10-m.gaps;
+    else if(mode==='compact')score=-m.gaps*100+m.free+m.activityScore*5;
+    else if(mode==='days')score=-m.campus*100+m.activityScore*10+m.free;
+    else if(mode==='late')score=-m.early*100+m.activityScore*10+m.free;
+    else if(mode==='work')score=m.work*100+m.activityScore*5-m.gaps*2;
+    else score=m.activityScore*35+m.free*3-m.gaps*4-m.campus*5-m.early*8;
     return{s,...m,score};
   }).sort((a,b)=>b.score-a.score).slice(0,10);
 }
@@ -243,6 +299,37 @@ async function loadLiveCourses(){
     loading=false; btn.disabled=false; btn.textContent='Generate live UVU schedules';
   }
 }
+function renderActivities(){
+  $('#activityEditor').innerHTML=activities.length?activities.map(a=>`<div class="activityCard" data-id="${a.id}">
+    <div class="activityTop"><b>${esc(a.type)}</b><button class="removeActivity" data-id="${a.id}">×</button></div>
+    <div class="activityGrid">
+      <select class="activityPriority" data-id="${a.id}"><option value="flexible" ${a.priority==='flexible'?'selected':''}>Flexible</option><option value="preferred" ${a.priority==='preferred'?'selected':''}>Preferred</option><option value="important" ${a.priority==='important'?'selected':''}>Important</option></select>
+      <select class="activityDuration" data-id="${a.id}">${[30,45,60,90,120,180,240].map(n=>`<option value="${n}" ${+a.duration===n?'selected':''}>${n<60?n+' min':(n/60)+' hr'}</option>`).join('')}</select>
+    </div>
+    <div class="activityDays">${D.map(d=>`<button class="${a.days.includes(d)?'on':''}" data-id="${a.id}" data-day="${d}">${DN[d]}</button>`).join('')}</div>
+  </div>`).join(''):'<div class="note">No activities added yet. Add study, work, gym, lunch, clubs, or personal time.</div>';
+  document.querySelectorAll('.removeActivity').forEach(b=>b.onclick=()=>{activities=activities.filter(a=>a.id!==+b.dataset.id);render()});
+  document.querySelectorAll('.activityPriority').forEach(x=>x.onchange=()=>{activities.find(a=>a.id===+x.dataset.id).priority=x.value;render()});
+  document.querySelectorAll('.activityDuration').forEach(x=>x.onchange=()=>{activities.find(a=>a.id===+x.dataset.id).duration=+x.value;render()});
+  document.querySelectorAll('.activityDays button').forEach(b=>b.onclick=()=>{
+    let a=activities.find(a=>a.id===+b.dataset.id),d=b.dataset.day;
+    a.days=a.days.includes(d)?a.days.filter(x=>x!==d):[...a.days,d];
+    render();
+  });
+}
+function updateBestMetric(r){
+  let mode=$('#mode').value,label='BEST RESULT',value='—',sub='schedule fit';
+  if(r){
+    if(mode==='free'){label='USABLE FREE TIME';value=r.free.toFixed(1)+' hrs';sub='available per week'}
+    else if(mode==='study'){label='STUDY-FRIENDLY';value=String(r.studyBlocks);sub='2+ hour study blocks'}
+    else if(mode==='compact'){label='CLASS GAPS';value=r.gaps.toFixed(1)+' hrs';sub='per week'}
+    else if(mode==='days'){label='CAMPUS DAYS';value=String(r.campus);sub='days per week'}
+    else if(mode==='late'){label='EARLY CLASSES';value=String(r.early);sub='before 9:00 AM'}
+    else if(mode==='work'){label='WORK FIT';value=r.work.toFixed(1)+' hrs';sub='planned work time'}
+    else {label='BALANCED FIT';value=`${r.activityFits}/${activities.length||0}`;sub='activities accommodated'}
+  }
+  $('#bestMetricLabel').textContent=label;$('#bestMetric').textContent=value;$('#bestMetricSub').textContent=sub;
+}
 function renderAvailability(){
   $('#availability').innerHTML=D.map(d=>`<div class="daywin"><button data-day="${d}" class="${windows[d].enabled?'':'off'}">${DN[d]}</button><input data-day="${d}" data-k="start" type="time" value="${tin(windows[d].start)}" ${windows[d].enabled?'':'disabled'}><span>–</span><input data-day="${d}" data-k="end" type="time" value="${tin(windows[d].end)}" ${windows[d].enabled?'':'disabled'}></div>`).join('');
   document.querySelectorAll('.daywin button').forEach(b=>b.onclick=()=>{let d=b.dataset.day;windows[d].enabled=!windows[d].enabled;render()});
@@ -255,19 +342,28 @@ function render(){
     if(JSON.stringify(courses)!==JSON.stringify(loadedCourses)){liveReady=false;DATA=[];$('#loadStatus').textContent='Course list changed — generate again to refresh UVU data.'}
     render();
   });
+  renderActivities();
   renderAvailability();
   let rs=getResults();
   $('#shown').textContent=liveReady?rs.length+' shown':'';
-  $('#bestMetric').textContent=rs.length?rs[0].work.toFixed(1)+' hrs':'—';
+  updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
   let a=rs[selected];
-  $('#calendar').innerHTML=a?`<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.work.toFixed(1)} work hrs · ${a.campus} campus days</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${a.s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>`<div class="event"><strong>${esc(x.course)}</strong><span>${fmt(m.start)}–${fmt(m.end)}</span><small>Sec ${esc(x.section)} · ${esc(x.professor||'TBA')}</small>${m.location?`<small>${esc(m.location)}</small>`:''}</div>`)).join('')}</div>`).join('')}</div></div>`:'';
+  $('#calendar').innerHTML=a?`<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.free.toFixed(1)} free hrs · ${a.campus} campus days · ${a.activityFits}/${activities.length} activities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${a.s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>`<div class="event"><strong>${esc(x.course)}</strong><span>${fmt(m.start)}–${fmt(m.end)}</span><small>Sec ${esc(x.section)} · ${hasKnownProfessor(x.professor)?`<a href="${rmpUrl(x.professor)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">${esc(x.professor)}</a>`:esc(x.professor||'TBA')}</small>${m.location?`<small>${esc(m.location)}</small>`:''}</div>`)).join('')}</div>`).join('')}</div></div>`:'';
   $('#results').innerHTML=!liveReady
     ?'<div class="empty">Choose your courses, then click <b>Generate live UVU schedules</b>.</div>'
-    :rs.length?rs.map((r,i)=>`<div class="result ${i===0?'best':''}" data-i="${i}"><div class="rank"><span>#${i+1}</span>${i===0?'<b>BEST FIT</b>':''}</div><div class="stats"><div><strong>${r.work.toFixed(1)}</strong><span>work hrs/wk</span></div><div><strong>${r.gaps.toFixed(1)}</strong><span>class-gap hrs</span></div><div><strong>${r.campus}</strong><span>campus days</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges"><span class="badge">${esc(x.professor||'Instructor TBA')}</span>${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null?'':`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seats':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join('')
+    :rs.length?rs.map((r,i)=>`<div class="result ${i===0?'best':''}" data-i="${i}"><div class="rank"><span>#${i+1}</span>${i===0?'<b>BEST FIT</b>':''}</div><div class="stats"><div><strong>${r.free.toFixed(1)}</strong><span>usable free hrs</span></div><div><strong>${r.activityFits}/${activities.length}</strong><span>activities fit</span></div><div><strong>${r.campus}</strong><span>campus days</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges">${professorHtml(x.professor)}${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null?'':`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seats':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join('')
     :'<div class="empty">No conflict-free schedule found with the current courses and filters.</div>';
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
 }
+$('#addActivity').onclick=()=>{
+  let type=$('#activityType').value;
+  if(type==='Custom'){
+    type=prompt('Activity name:','Personal')?.trim()||'Personal';
+  }
+  activities.push({id:nextActivityId++,type,days:['M','T','W','R','F'],duration:type==='Lunch'?45:type==='Study'?120:60,priority:'preferred'});
+  render();
+};
 $('#addCourse').onclick=()=>{
   let i=$('#courseInput');
   let c=normalizeCourseInput(i.value);
