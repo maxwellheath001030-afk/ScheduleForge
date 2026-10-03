@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.1</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.2</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -84,7 +84,7 @@
 <section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, add the activities that matter to you, and compare schedules that fit the rest of your life.</p></div><div class="metric"><small id="bestMetricLabel">BEST RESULT</small><strong id="bestMetric">—</strong><span id="bestMetricSub">schedule fit</span></div></section>
 <div class="layout">
 <aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
-<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button><button id="clearAllBtn" type="button" style="width:100%;margin-top:7px;padding:8px;border:1px solid #ddcfc2;border-radius:9px;background:#fff;color:#8a4a20;font-weight:750;cursor:pointer">Clear selections / Start over</button>
 <div id="loadedSummary" class="loaded-summary"></div>
 <div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
@@ -103,13 +103,13 @@
 <option value="work">Best for work</option>
 </select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
 
-<p class="note" id="dataNote">Build your course list, load sections once, then tune the rest of your week without waiting on UVU again.</p></aside>
+<p class="note" id="dataNote">Your courses and preferences are saved automatically in this browser. Load sections once, then tune the rest of your week without waiting on UVU again.</p></aside>
 <section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><b id="shown"></b></div><div id="calendar"></div><div id="results"></div></section>
 </div></main>
 <script>
 let DATA=[];
 const D=['M','T','W','R','F'], DN={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri'}, FULL={M:'Monday',T:'Tuesday',W:'Wednesday',R:'Thursday',F:'Friday'};
-let courses=['ME 4820','ME 4180','ME 4510','ME 4010','ME 4900R','ME 3335','ME 4015'], selected=0;
+let courses=[], selected=0;
 let windows=Object.fromEntries(D.map(d=>[d,{enabled:true,start:420,end:1020}]));
 let activities=[
  {id:1,type:'Study',days:['M','T','W','R','F'],duration:120,priority:'preferred'},
@@ -354,6 +354,35 @@ function renderAvailability(){
   document.querySelectorAll('.daywin button').forEach(b=>b.onclick=()=>{let d=b.dataset.day;windows[d].enabled=!windows[d].enabled;renderAvailability();markNeedsRecalc()});
   document.querySelectorAll('.daywin input').forEach(i=>i.onchange=()=>{windows[i.dataset.day][i.dataset.k]=tval(i.value);markNeedsRecalc()});
 }
+const STORAGE_KEY='scheduleforge-settings-v1';
+function saveSettings(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({
+      courses,activities,windows,nextActivityId,
+      commute:+($('#commute')?.value||0),
+      minShift:+($('#minShift')?.value||0),
+      mode:$('#mode')?.value||'balanced',
+      openOnly:!!$('#openOnly')?.checked
+    }));
+  }catch(e){}
+}
+function restoreSettings(){
+  try{
+    const x=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    if(!x)return false;
+    if(Array.isArray(x.courses)) courses=x.courses;
+    if(Array.isArray(x.activities)) activities=x.activities;
+    if(x.windows) Object.assign(windows,x.windows);
+    if(Number.isFinite(x.nextActivityId)) nextActivityId=x.nextActivityId;
+    if($('#commute')&&Number.isFinite(x.commute)) $('#commute').value=x.commute;
+    if($('#minShift')&&Number.isFinite(x.minShift)) $('#minShift').value=x.minShift;
+    if($('#mode')&&x.mode) $('#mode').value=x.mode;
+    if($('#openOnly')&&typeof x.openOnly==='boolean') $('#openOnly').checked=x.openOnly;
+    if($('#commuteVal')) $('#commuteVal').textContent=$('#commute').value+' minutes';
+    return true;
+  }catch(e){return false}
+}
+function clearSavedSettings(){try{localStorage.removeItem(STORAGE_KEY)}catch(e){}}
 function loadedSectionCount(){
   return Object.values(DATA||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0);
 }
@@ -379,6 +408,7 @@ function resultReasons(result){
   return r.slice(0,4);
 }
 function markNeedsRecalc(){
+  saveSettings();
   if(liveReady){
     $('#loadStatus').textContent='Preferences changed — press ② Generate schedules to update the results.';
     $('#recalculateBtn').style.background='#fff0df';
@@ -388,7 +418,7 @@ function render(){
   updateLoadedSummary();
   $('#tags').innerHTML=courses.map(c=>`<button class="tag" data-c="${esc(c)}">${esc(c)} ×</button>`).join('');
   document.querySelectorAll('.tag').forEach(b=>b.onclick=()=>{
-    courses=courses.filter(c=>c!==b.dataset.c);selected=0;
+    courses=courses.filter(c=>c!==b.dataset.c);selected=0;saveSettings();
     if(JSON.stringify(courses)!==JSON.stringify(loadedCourses)){liveReady=false;DATA=[];$('#loadStatus').textContent='Course list changed — generate again to refresh UVU data.'}
     render();
   });
@@ -442,6 +472,19 @@ $('#addCourse').onclick=()=>{
   render();
 };
 $('#courseInput').onkeydown=e=>{if(e.key==='Enter')$('#addCourse').click()};
+$('#clearAllBtn').onclick=()=>{
+  if(!confirm('Clear all courses, activities, and scheduling preferences and start over?'))return;
+  clearSavedSettings();
+  courses=[]; activities=[]; nextActivityId=1; DATA={}; liveReady=false; selected=0;
+  for(const d of DAYS) windows[d]={enabled:true,start:420,end:1020};
+  if($('#commute')) $('#commute').value=10;
+  if($('#commuteVal')) $('#commuteVal').textContent='10 minutes';
+  if($('#minShift')) $('#minShift').value=60;
+  if($('#mode')) $('#mode').value='balanced';
+  if($('#openOnly')) $('#openOnly').checked=true;
+  $('#loadStatus').textContent='Cleared. Add the courses you want to schedule.';
+  render();
+};
 $('#generateBtn').onclick=loadLiveCourses;
 $('#recalculateBtn').onclick=()=>{
   if(!liveReady || loadedSectionCount()===0){
@@ -467,6 +510,7 @@ function setTerm(t){
 $('#termSelect').onchange=e=>setTerm(e.target.value);
 $('#termBig').textContent=$('#termSelect').value.toUpperCase();
 $('#sideTerm').textContent=$('#termSelect').value;
+restoreSettings();
 render();
 checkUVU();
 </script>
