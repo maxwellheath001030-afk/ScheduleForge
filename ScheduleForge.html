@@ -93,7 +93,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.4</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.5</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -204,10 +204,20 @@ function combos(groups){
   return out;
 }
 function deliveryKind(sec){
-  const t=((sec.scheduleType||'')+' '+(sec.modality||'')+' '+(sec.location||'')).toLowerCase();
-  if(t.includes('online') && !t.includes('face to face')) return 'online';
-  if(t.includes('livestream') && !t.includes('face to face')) return 'online';
+  const schedule=((sec.scheduleType||sec.delivery||'')+' '+(sec.modality||'')).toLowerCase();
+  const meetingLocations=(sec.meetings||[]).map(m=>String(m.location||'').toLowerCase());
+  const hasOnlineMeeting=meetingLocations.some(x=>x.includes('online')||x.includes('livestream')||x.includes('remote'));
+  const hasPhysicalMeeting=meetingLocations.some(x=>x && !x.includes('online')&&!x.includes('livestream')&&!x.includes('remote'));
+  const saysOnline=schedule.includes('online')||schedule.includes('livestream')||schedule.includes('remote');
+  const saysFace=schedule.includes('face to face')||schedule.includes('in person');
+
+  if((hasOnlineMeeting||saysOnline) && (hasPhysicalMeeting||saysFace)) return 'hybrid';
+  if(hasOnlineMeeting||saysOnline) return 'online';
   return 'inperson';
+}
+function deliveryLabel(sec){
+  const k=deliveryKind(sec);
+  return k==='online'?'Online':k==='hybrid'?'Hybrid':'In person';
 }
 function deliveryAllowed(sec){
   // Delivery format is now a soft preference, not a hard exclusion.
@@ -216,7 +226,10 @@ function deliveryAllowed(sec){
 function deliveryPreferenceScore(schedule){
   const pref=$('#deliveryPreference')?.value||'any';
   if(pref==='any') return 0;
-  return schedule.reduce((n,sec)=>n+(deliveryKind(sec)===pref?1:0),0);
+  return schedule.reduce((n,sec)=>{
+    const k=deliveryKind(sec);
+    return n+(k===pref?1:k==='hybrid'?0.5:0);
+  },0);
 }
 function sectionAllowed(sec){
   if(!deliveryAllowed(sec)) return false;
@@ -543,7 +556,7 @@ function calendarDayHtml(schedule,d){
     if(item.kind==='gap'){
       return `<div class="event gap"><strong>${gapLabel(item.end-item.start)}</strong><span>${fmt(item.start)}–${fmt(item.end)}</span></div>`;
     }
-    return `<div class="event"><strong>${esc(item.x.course)}</strong><span>${fmt(item.m.start)}–${fmt(item.m.end)}</span><small>Sec ${esc(item.x.section)} · ${hasKnownProfessor(item.x.professor)?`<a href="${rmpUrl(item.x.professor)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">${esc(item.x.professor)}</a>`:esc(item.x.professor||'TBA')}</small>${item.m.location?`<small>${esc(item.m.location)}</small>`:''}<small><b>${deliveryKind(item.x)==='online'?'Online':'In person'}</b></small></div>`;
+    return `<div class="event"><strong>${esc(item.x.course)}</strong><span>${fmt(item.m.start)}–${fmt(item.m.end)}</span><small>Sec ${esc(item.x.section)} · ${hasKnownProfessor(item.x.professor)?`<a href="${rmpUrl(item.x.professor)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">${esc(item.x.professor)}</a>`:esc(item.x.professor||'TBA')}</small>${item.m.location?`<small>${esc(item.m.location)}</small>`:''}<small><b>${deliveryLabel(item.x)}</b></small></div>`;
   }).join('');
 }
 function updateBestMetric(r){
