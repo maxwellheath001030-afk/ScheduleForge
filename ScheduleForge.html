@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ScheduleForge — UVU Prototype</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f8f6f2;color:#26231f;font-family:Arial,sans-serif}header{height:70px;background:#fff;border-bottom:1px solid #e6ded4;display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;color:#82776d;font-weight:500}.pill{background:#fff0df;color:#9a4d12;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:700}main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:end;margin-bottom:28px}.hero h1{font-size:44px;line-height:1.05;margin:8px 0}.hero h1 span{color:#e66a12}.hero p{color:#766d65;line-height:1.55}.eyebrow{font-size:11px;font-weight:800;color:#e66a12;letter-spacing:.08em}.metric{background:#352a22;color:white;border-radius:17px;padding:22px}.metric small{font-size:10px;color:#e6cdb9}.metric strong{display:block;font-size:36px;margin:7px 0}.metric span{font-size:11px;color:#e6cdb9}.layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.panel{background:white;border:1px solid #e6ded4;border-radius:16px;padding:22px}aside{position:sticky;top:15px}h2{margin:0 0 17px;font-size:21px}label{display:block;font-size:12px;font-weight:700;color:#685f57;margin:17px 0 7px}.add{display:flex;gap:7px}.add input,select{width:100%;padding:10px;border:1px solid #ddd2c7;border-radius:8px;background:white}.add button{width:42px;border:0;border-radius:8px;background:#d85f0b;color:white;font-size:20px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{border:0;border-radius:7px;background:#fff3e8;color:#8a4615;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer}.availability{display:flex;flex-direction:column;gap:6px}.daywin{display:grid;grid-template-columns:40px 1fr 10px 1fr;gap:5px;align-items:center}.daywin button{border:0;border-radius:7px;padding:8px 3px;font-size:10px;font-weight:800;background:#ffead8;color:#d85f0b}.daywin button.off{background:#eee;color:#999}.daywin input{min-width:0;width:100%;padding:6px 2px;border:1px solid #ddd2c7;border-radius:6px;font-size:10px}.range{width:100%;accent-color:#d85f0b}.rangeval{text-align:right;color:#d85f0b;font-size:11px;font-weight:700}.note{font-size:11px;line-height:1.55;color:#91877e;margin-top:18px}.resultHead{display:flex;justify-content:space-between;border-bottom:1px solid #e9eeeb;padding-bottom:14px}.resultHead small{font-size:10px;color:#82776e;letter-spacing:.1em}.calendar{border:1px solid #e8ded4;border-radius:13px;margin:16px 0;overflow:hidden}.calTitle{background:#352a22;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;font-size:12px}.week{display:grid;grid-template-columns:repeat(5,1fr);min-height:150px}.daycol{padding:9px 6px;border-right:1px solid #eee5dc}.daycol:last-child{border:0}.daycol>b{font-size:10px;color:#68776f}.event{margin-top:7px;background:#fff0e3;border-left:3px solid #ef7a22;border-radius:5px;padding:6px}.event.activity{background:#fff3e8;border-left-color:#ef7a22}.event.activity strong{color:#a84a0b}.event strong,.event span,.event small{display:block;font-size:9px}.event strong{font-size:10px}.event span,.event small{color:#746a62;margin-top:2px}.result{border:1px solid #e6ded4;border-radius:13px;margin-top:13px;overflow:hidden;cursor:pointer}.result:hover{box-shadow:0 5px 16px #352a2214}.result.best{border:2px solid #f07a22}.rank{padding:10px 13px;background:#fcfaf7;display:flex;justify-content:space-between;font-weight:800}.rank b{font-size:9px;color:#d85f0b}.stats{display:flex;gap:28px;padding:14px;border-bottom:1px solid #eee7df}.stats strong{display:block;font-size:22px;color:#b84f08}.stats span{font-size:10px;color:#887e75}.classes{padding:5px 14px 10px}.classrow{display:grid;grid-template-columns:95px 60px 1fr;padding:7px 0;border-bottom:1px dashed #eee6de;font-size:11px}.classrow:last-child{border:0}.classrow span{color:#776d65}.empty{padding:40px;text-align:center;color:#897f76}@media(max-width:850px){.hero{grid-template-columns:1fr}.metric{display:none}.layout{grid-template-columns:1fr}aside{position:static}.week{grid-template-columns:1fr}.daycol{border-right:0;border-bottom:1px solid #eee5dc}.hero h1{font-size:34px}}
+*{box-sizing:border-box}body{margin:0;background:#f8f6f2;color:#26231f;font-family:Arial,sans-serif}header{height:70px;background:#fff;border-bottom:1px solid #e6ded4;display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;color:#82776d;font-weight:500}.pill{background:#fff0df;color:#9a4d12;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:700}main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:end;margin-bottom:28px}.hero h1{font-size:44px;line-height:1.05;margin:8px 0}.hero h1 span{color:#e66a12}.hero p{color:#766d65;line-height:1.55}.eyebrow{font-size:11px;font-weight:800;color:#e66a12;letter-spacing:.08em}.metric{background:#352a22;color:white;border-radius:17px;padding:22px}.metric small{font-size:10px;color:#e6cdb9}.metric strong{display:block;font-size:36px;margin:7px 0}.metric span{font-size:11px;color:#e6cdb9}.layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.panel{background:white;border:1px solid #e6ded4;border-radius:16px;padding:22px}aside{position:static}h2{margin:0 0 17px;font-size:21px}label{display:block;font-size:12px;font-weight:700;color:#685f57;margin:17px 0 7px}.add{display:flex;gap:7px}.add input,select{width:100%;padding:10px;border:1px solid #ddd2c7;border-radius:8px;background:white}.add button{width:42px;border:0;border-radius:8px;background:#d85f0b;color:white;font-size:20px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{border:0;border-radius:7px;background:#fff3e8;color:#8a4615;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer}.availability{display:flex;flex-direction:column;gap:6px}.daywin{display:grid;grid-template-columns:40px 1fr 10px 1fr;gap:5px;align-items:center}.daywin button{border:0;border-radius:7px;padding:8px 3px;font-size:10px;font-weight:800;background:#ffead8;color:#d85f0b}.daywin button.off{background:#eee;color:#999}.daywin input{min-width:0;width:100%;padding:6px 2px;border:1px solid #ddd2c7;border-radius:6px;font-size:10px}.range{width:100%;accent-color:#d85f0b}.rangeval{text-align:right;color:#d85f0b;font-size:11px;font-weight:700}.note{font-size:11px;line-height:1.55;color:#91877e;margin-top:18px}.resultHead{display:flex;justify-content:space-between;border-bottom:1px solid #e9eeeb;padding-bottom:14px}.resultHead small{font-size:10px;color:#82776e;letter-spacing:.1em}.calendar{border:1px solid #e8ded4;border-radius:13px;margin:16px 0;overflow:hidden}.calTitle{background:#352a22;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;font-size:12px}.week{display:grid;grid-template-columns:repeat(5,1fr);min-height:150px}.daycol{padding:9px 6px;border-right:1px solid #eee5dc}.daycol:last-child{border:0}.daycol>b{font-size:10px;color:#68776f}.event{margin-top:7px;background:#fff0e3;border-left:3px solid #ef7a22;border-radius:5px;padding:6px}.event.activity{background:#fff3e8;border-left-color:#ef7a22}.event.activity strong{color:#a84a0b}.event strong,.event span,.event small{display:block;font-size:9px}.event strong{font-size:10px}.event span,.event small{color:#746a62;margin-top:2px}.result{border:1px solid #e6ded4;border-radius:13px;margin-top:13px;overflow:hidden;cursor:pointer}.result:hover{box-shadow:0 5px 16px #352a2214}.result.best{border:2px solid #f07a22}.rank{padding:10px 13px;background:#fcfaf7;display:flex;justify-content:space-between;font-weight:800}.rank b{font-size:9px;color:#d85f0b}.stats{display:flex;gap:28px;padding:14px;border-bottom:1px solid #eee7df}.stats strong{display:block;font-size:22px;color:#b84f08}.stats span{font-size:10px;color:#887e75}.classes{padding:5px 14px 10px}.classrow{display:grid;grid-template-columns:95px 60px 1fr;padding:7px 0;border-bottom:1px dashed #eee6de;font-size:11px}.classrow:last-child{border:0}.classrow span{color:#776d65}.empty{padding:40px;text-align:center;color:#897f76}@media(max-width:850px){.hero{grid-template-columns:1fr}.metric{display:none}.layout{grid-template-columns:1fr}aside{position:static}.week{grid-template-columns:1fr}.daycol{border-right:0;border-bottom:1px solid #eee5dc}.hero h1{font-size:34px}}
 
 .badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.badge{font-size:8px;font-weight:800;padding:3px 6px;border-radius:10px;background:#f4eee8;color:#6d6259}.badge.open{background:#fff0df;color:#b94e08}.rmpLink{font-size:8px;font-weight:800;padding:3px 6px;border-radius:10px;background:#fff0df;color:#a84a0b;text-decoration:none}.rmpLink:hover{text-decoration:underline}.badge.closed{background:#f8e8e5;color:#9b3d31}.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:7px}.checkline{display:flex;gap:8px;align-items:center;font-size:11px;color:#6d6259;margin-top:10px}.checkline input{accent-color:#d85f0b}
 
@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v3.4</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v3.5</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -84,7 +84,8 @@
 <section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, add the activities that matter to you, and compare schedules that fit the rest of your life.</p></div><div class="metric"><small id="bestMetricLabel">BEST RESULT</small><strong id="bestMetric">—</strong><span id="bestMetricSub">schedule fit</span></div></section>
 <div class="layout">
 <aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
-<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">Generate live UVU schedules</button><div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">Refresh UVU data & generate</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">Recalculate with current data</button>
+<div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
 <div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity">+</button></div>
 <div id="activityEditor" style="margin-top:8px"></div>
@@ -101,7 +102,7 @@
 <option value="work">Best for work</option>
 </select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
 
-<p class="note" id="dataNote">Add the courses you need. ScheduleForge will pull the current sections directly from UVU before generating schedules.</p></aside>
+<p class="note" id="dataNote">Course data is loaded from UVU only when you refresh it. Activities, priorities, commute, and optimization changes recalculate instantly using the sections already loaded.</p></aside>
 <section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><b id="shown"></b></div><div id="calendar"></div><div id="results"></div></section>
 </div></main>
 <script>
@@ -263,7 +264,7 @@ async function loadLiveCourses(){
   if(!courses.length){alert('Add at least one course first.');return}
   loading=true; liveReady=false; DATA=[]; selected=0;
   const btn=$('#generateBtn'), term=$('#termSelect').value;
-  btn.disabled=true; btn.textContent='Loading UVU sections…';
+  btn.disabled=true; btn.textContent='Refreshing UVU data…';
   $('#loadStatus').textContent='';
   try{
     const ok=await checkUVU();
@@ -291,7 +292,7 @@ async function loadLiveCourses(){
     $('#calendar').innerHTML='';
     $('#bestMetric').textContent='—';
   }finally{
-    loading=false; btn.disabled=false; btn.textContent='Generate live UVU schedules';
+    loading=false; btn.disabled=false; btn.textContent='Refresh UVU data & generate';
   }
 }
 function renderActivities(){
@@ -365,7 +366,7 @@ function render(){
   :`<div class="event activity"><strong>${esc(item.p.type)} break</strong><span>${fmt(item.p.start)}–${fmt(item.p.end)}</span><small>${esc(item.p.priority)} activity</small></div>`
 ).join('')}</div>`).join('')}</div></div>`:'';
   $('#results').innerHTML=!liveReady
-    ?'<div class="empty">Choose your courses, then click <b>Generate live UVU schedules</b>.</div>'
+    ?'<div class="empty">Choose your courses, then click <b>Refresh UVU data & generate</b>.</div>'
     :rs.length?rs.map((r,i)=>`<div class="result ${i===0?'best':''}" data-i="${i}"><div class="rank"><span>#${i+1}</span>${i===0?'<b>BEST FIT</b>':''}</div><div class="stats"><div><strong>${r.free.toFixed(1)}</strong><span>usable free hrs</span></div><div><strong>${r.activityFits}/${activities.length}</strong><span>activities fit</span></div><div><strong>${r.campus}</strong><span>campus days</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges">${professorHtml(x.professor)}${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null?'':`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seats':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join('')
     :'<div class="empty">No conflict-free schedule found with the current courses and filters.</div>';
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
@@ -400,6 +401,15 @@ $('#addCourse').onclick=()=>{
 };
 $('#courseInput').onkeydown=e=>{if(e.key==='Enter')$('#addCourse').click()};
 $('#generateBtn').onclick=loadLiveCourses;
+$('#recalculateBtn').onclick=()=>{
+  if(!liveReady){
+    $('#loadStatus').textContent='Load UVU course data first using the refresh button above.';
+    return;
+  }
+  selected=0;
+  $('#loadStatus').textContent='Recalculated instantly using the UVU sections already loaded.';
+  render();
+};
 $('#commute').oninput=e=>{$('#commuteVal').textContent=e.target.value+' minutes';render()};
 $('#minShift').onchange=render;$('#mode').onchange=render;$('#openOnly').onchange=render;
 
