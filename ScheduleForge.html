@@ -90,15 +90,37 @@
   text-align:left;
   font-weight:400;
 }
+
+.page-tabs{display:flex;gap:8px;margin:0 0 18px}
+.page-tab{border:1px solid #ddcfc2;background:#fff;color:#7b5b44;border-radius:10px;padding:9px 14px;font-weight:800;cursor:pointer}
+.page-tab.active{background:#352a22;color:#fff;border-color:#352a22}
+.saved-view{display:none}
+.saved-view.active{display:block}
+.builder-view.hidden{display:none}
+.save-plan-btn{border:0;border-radius:9px;background:#d85f0b;color:#fff;padding:9px 13px;font-weight:800;cursor:pointer}
+.saved-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.saved-card{border:1px solid #e6ded4;border-radius:14px;background:#fff;padding:17px}
+.saved-card h3{margin:0 0 4px;font-size:17px}
+.saved-meta{font-size:11px;color:#82776d;margin-bottom:12px}
+.saved-course{padding:8px 0;border-top:1px solid #f0e9e2;font-size:12px;line-height:1.45}
+.saved-actions{display:flex;gap:7px;margin-top:12px}
+.saved-actions button{flex:1;border:1px solid #ddcfc2;border-radius:8px;background:#fff;padding:8px;font-weight:750;color:#8a4a20;cursor:pointer}
+.saved-actions .primary{background:#fff0df;border-color:#efc59f}
+.saved-empty{padding:42px 20px;text-align:center;color:#82776d;border:1px dashed #ddcfc2;border-radius:14px;background:#fff}
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.5</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.19</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
     </div></header>
 <main>
+<div class="page-tabs">
+  <button class="page-tab active" id="builderTab" type="button">Build schedule</button>
+  <button class="page-tab" id="savedTab" type="button">Saved plans <span id="savedCount"></span></button>
+</div>
+<div class="builder-view" id="builderView">
 <section id="termBanner" style="background:#352a22;color:white;border-radius:18px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px">
   <div>
     <div style="font-size:10px;font-weight:800;letter-spacing:.13em;color:#e9cdb6">SCHEDULE BEING BUILT FOR</div>
@@ -148,8 +170,17 @@
 </select>
 
 <p class="note" id="dataNote">Your courses and preferences are saved automatically in this browser. Load sections once, then tune the rest of your week without waiting on UVU again.</p></aside>
-<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><b id="shown"></b></div><div id="calendar"></div><div id="results"></div></section>
-</div></main>
+<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><div style="display:flex;align-items:center;gap:10px"><b id="shown"></b><button id="savePlanBtn" class="save-plan-btn" type="button" style="display:none">Save viewed plan</button></div></div><div id="calendar"></div><div id="results"></div></section>
+</div>
+</div>
+<div class="saved-view" id="savedView">
+  <section class="panel">
+    <div class="resultHead"><div><small>SAVED SCHEDULES</small><h2>My plans</h2></div></div>
+    <p class="activityHint" style="margin-bottom:16px">Save schedules you like so you can compare them later. Saved plans stay in this browser.</p>
+    <div id="savedPlans"></div>
+  </section>
+</div>
+</main>
 <script>
 let DATA=[];
 const D=['M','T','W','R','F'], DN={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri'}, FULL={M:'Monday',T:'Tuesday',W:'Wednesday',R:'Thursday',F:'Friday'};
@@ -162,6 +193,79 @@ let activities=[
 let nextActivityId=3;
 
 let liveReady=false, loading=false, loadedTerm='', loadedCourses=[];
+
+const PLANS_KEY='scheduleforge-saved-plans-v1';
+let currentResults=[];
+function getSavedPlans(){try{return JSON.parse(localStorage.getItem(PLANS_KEY)||'[]')||[]}catch(e){return[]}}
+function setSavedPlans(plans){try{localStorage.setItem(PLANS_KEY,JSON.stringify(plans))}catch(e){} updateSavedCount()}
+function updateSavedCount(){
+  const n=getSavedPlans().length, el=$('#savedCount');
+  if(el)el.textContent=n?`(${n})`:'';
+}
+function sectionSnapshot(x){
+  return {course:x.course,section:x.section,crn:x.crn,professor:x.professor,title:x.title,credits:x.credits,
+    delivery:deliveryLabel(x),meetings:(x.meetings||[]).map(m=>({...m}))};
+}
+function saveViewedPlan(){
+  const r=currentResults[selected];
+  if(!r)return;
+  const plans=getSavedPlans();
+  const name=prompt('Name this plan:',`Plan ${plans.length+1}`);
+  if(!name)return;
+  plans.unshift({
+    id:Date.now(),name:name.trim()||`Plan ${plans.length+1}`,semester:$('#termSelect').value,
+    savedAt:new Date().toISOString(),courses:[...courses],schedule:r.s.map(sectionSnapshot),
+    credits:totalCredits(r.s),campus:r.campus,gaps:r.gaps,
+    settings:{activities:JSON.parse(JSON.stringify(activities)),windows:JSON.parse(JSON.stringify(windows)),
+      commute:+$('#commute').value,minShift:+$('#minShift').value,mode:$('#mode').value,
+      deliveryPreference:$('#deliveryPreference').value}
+  });
+  setSavedPlans(plans.slice(0,20));
+  renderSavedPlans();
+  $('#loadStatus').textContent=`Saved "${name.trim()}".`;
+}
+function renderSavedPlans(){
+  const plans=getSavedPlans(), box=$('#savedPlans');
+  updateSavedCount();
+  if(!box)return;
+  if(!plans.length){box.innerHTML='<div class="saved-empty"><b>No saved plans yet.</b><br><span>Build a schedule, choose the option you like, and save it here.</span></div>';return}
+  box.innerHTML=`<div class="saved-grid">${plans.map(p=>`<div class="saved-card">
+    <h3>${esc(p.name)}</h3>
+    <div class="saved-meta">${esc(p.semester)} · ${p.credits??'—'} credits · saved ${new Date(p.savedAt).toLocaleDateString()}</div>
+    ${(p.schedule||[]).map(x=>`<div class="saved-course"><b>${esc(x.course)} · Sec ${esc(x.section)}</b><br>${(x.meetings||[]).map(m=>`${(m.days||[]).map(d=>DN[d]||d).join('/')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join('<br>')}<br><span style="color:#82776d">${esc(x.delivery||'')} · ${esc(x.professor||'TBA')}</span></div>`).join('')}
+    <div class="saved-actions"><button class="primary" data-load="${p.id}">Use this plan</button><button data-delete="${p.id}">Delete</button></div>
+  </div>`).join('')}</div>`;
+  box.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Delete this saved plan?'))return;
+    setSavedPlans(getSavedPlans().filter(p=>String(p.id)!==b.dataset.delete));renderSavedPlans();
+  });
+  box.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>restoreSavedPlan(b.dataset.load));
+}
+function restoreSavedPlan(id){
+  const p=getSavedPlans().find(x=>String(x.id)===String(id));if(!p)return;
+  courses=[...(p.courses||[])];
+  if(p.settings?.activities)activities=JSON.parse(JSON.stringify(p.settings.activities));
+  if(p.settings?.windows)windows=JSON.parse(JSON.stringify(p.settings.windows));
+  if(Number.isFinite(p.settings?.commute))$('#commute').value=p.settings.commute;
+  if(Number.isFinite(p.settings?.minShift))$('#minShift').value=p.settings.minShift;
+  if(p.settings?.mode)$('#mode').value=p.settings.mode;
+  if($('#deliveryPreference'))$('#deliveryPreference').value=p.settings?.deliveryPreference||'any';
+  if($('#termSelect')&&p.semester)$('#termSelect').value=p.semester;
+  $('#commuteVal').textContent=$('#commute').value+' minutes';
+  DATA=[];liveReady=false;loadedTerm='';loadedCourses=[];selected=0;
+  saveSettings();showPage('builder');setTerm(p.semester||$('#termSelect').value);
+  $('#loadStatus').textContent=`Loaded settings from "${p.name}". Click ① Load classes from UVU to refresh current section data.`;
+  render();
+}
+function showPage(page){
+  const saved=page==='saved';
+  $('#builderView').classList.toggle('hidden',saved);
+  $('#savedView').classList.toggle('active',saved);
+  $('#builderTab').classList.toggle('active',!saved);
+  $('#savedTab').classList.toggle('active',saved);
+  if(saved)renderSavedPlans();
+}
+
 
 const $=q=>document.querySelector(q);
 const fmt=m=>{let h=Math.floor(m/60),mm=m%60,a=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(mm).padStart(2,'0')} ${a}`};
@@ -673,7 +777,9 @@ function render(){
   renderActivities();
   renderAvailability();
   let rs=getResults();
+  currentResults=rs;
   $('#shown').textContent=liveReady?rs.length+' shown':'';
+  if($('#savePlanBtn'))$('#savePlanBtn').style.display=rs.length?'inline-block':'none';
   updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
   let a=rs[selected];
@@ -686,6 +792,11 @@ function render(){
     :'<div class="empty">No conflict-free schedule found with the current courses and filters.</div>';
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
 }
+$('#builderTab').onclick=()=>showPage('builder');
+$('#savedTab').onclick=()=>showPage('saved');
+$('#savePlanBtn').onclick=saveViewedPlan;
+updateSavedCount();
+
 $('#addActivity').onclick=()=>{
   let type=$('#activityType').value;
   if(type==='Custom'){
@@ -720,7 +831,7 @@ $('#clearAllBtn').onclick=()=>{
   if(!confirm('Clear all courses, activities, and scheduling preferences and start over?'))return;
   clearSavedSettings();
   courses=[]; activities=[]; nextActivityId=1; DATA={}; liveReady=false; selected=0;
-  for(const d of DAYS) windows[d]={enabled:true,start:420,end:1020};
+  for(const d of D) windows[d]={enabled:true,start:420,end:1020};
   if($('#commute')) $('#commute').value=10;
   if($('#commuteVal')) $('#commuteVal').textContent='10 minutes';
   if($('#minShift')) $('#minShift').value=60;
