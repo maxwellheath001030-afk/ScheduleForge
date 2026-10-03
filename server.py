@@ -74,6 +74,49 @@ def parse_meetings(text):
     return meetings
 
 
+def fetch_seat_info(term,row):
+    crn=row.get("crn")
+    if not crn:
+        return None
+    url=f"https://userve.uvu.edu/ssb/bwckschd.p_disp_detail_sched?crn_in={crn}&term_in={term}"
+    try:
+        r=requests.get(
+            url,
+            timeout=(3,5),
+            headers={"User-Agent":"ScheduleForge/1.6 UVU public class search"}
+        )
+        r.raise_for_status()
+        text=clean(BeautifulSoup(r.text,"html.parser").get_text(" ",strip=True))
+        # Detail page: Registration Availability / Capacity Actual Remaining / Seats C A R
+        m=re.search(r"Seats\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I)
+        if not m:
+            return None
+        capacity,actual,remaining=map(int,m.groups())
+        return {
+            "capacity":capacity,
+            "enrolled":actual,
+            "seatsAvailable":remaining,
+            "seatStatus":"available" if remaining>0 else "full"
+        }
+    except requests.RequestException:
+        return None
+
+def add_seat_info_parallel(term,rows):
+    if not rows:
+        return rows
+    workers=min(10,len(rows))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures={pool.submit(fetch_seat_info,term,row):row for row in rows}
+        for future in as_completed(futures):
+            row=futures[future]
+            try:
+                seat=future.result()
+            except Exception:
+                seat=None
+            if seat:
+                row.update(seat)
+    return rows
+
 def parse_listing_seats(block):
     # UVU class-search listing wording: "X of Y seats ..." where X is seats remaining.
     patterns=[
@@ -331,6 +374,9 @@ def course():
         # Do not fetch every section's Banner detail page here. Some UVU detail
         # pages are slow enough to exceed Render/Gunicorn request limits.
         # The listing parser already provides the schedule-critical fields.
+        # Seat availability is not present in the legacy listing response.
+        # Fetch only registration availability from CRN detail pages, concurrently.
+        rows=add_seat_info_parallel(term,rows)
         for row in rows:
             row.setdefault("seatStatus","unknown")
             row.setdefault("seatsAvailable",None)
