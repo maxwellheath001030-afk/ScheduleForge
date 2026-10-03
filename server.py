@@ -297,18 +297,17 @@ def course():
         if not rows:
             return jsonify(error="UVU response contained no parsed sections. This is treated as unverified, not as zero offerings.",
                            semester=semester,associatedTerm=actual,sourceUrl=url),502
+        # Do not fetch every section's Banner detail page here. Some UVU detail
+        # pages are slow enough to exceed Render/Gunicorn request limits.
+        # The listing parser already provides the schedule-critical fields.
         for row in rows:
-            try:
-                enrich(term,row)
-            except requests.exceptions.Timeout:
-                row["seatStatus"]="unavailable"
-                row["enrichmentError"]="UVU detail request timed out"
-            except requests.exceptions.RequestException as e:
-                row["seatStatus"]="unavailable"
-                row["enrichmentError"]="UVU detail request failed"
-            except Exception as e:
-                row["seatStatus"]="unavailable"
-                row["enrichmentError"]=str(e)
+            row.setdefault("seatStatus","unknown")
+            row.setdefault("seatsAvailable",None)
+            row.setdefault("capacity",None)
+            row.setdefault("enrolled",None)
+            row.setdefault("waitlistCapacity",None)
+            row.setdefault("waitlistEnrolled",None)
+            row.setdefault("waitlistAvailable",None)
         return jsonify(source="UVU public Banner",semester=semester,associatedTerm=actual,course=q,sections=rows)
     except Exception as e:
         return jsonify(error=str(e),semester=semester,sourceUrl=url),502
