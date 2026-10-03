@@ -65,7 +65,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.14</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.15</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -255,10 +255,10 @@ function normalizeLiveSection(x){
     instructors:x.instructors||[],
     title:x.title||'',
     credits:x.credits??null,
-    seatsAvailable:Number.isFinite(+x.seatsAvailable)?+x.seatsAvailable:null,
-    capacity:Number.isFinite(+x.capacity)?+x.capacity:null,
-    enrolled:Number.isFinite(+x.enrolled)?+x.enrolled:null,
-    waitlistAvailable:Number.isFinite(+x.waitlistAvailable)?+x.waitlistAvailable:null,
+    seatsAvailable:(x.seatsAvailable===null||x.seatsAvailable===undefined||x.seatsAvailable==='')?null:(Number.isFinite(Number(x.seatsAvailable))?Number(x.seatsAvailable):null),
+    capacity:(x.capacity===null||x.capacity===undefined||x.capacity==='')?null:(Number.isFinite(Number(x.capacity))?Number(x.capacity):null),
+    enrolled:(x.enrolled===null||x.enrolled===undefined||x.enrolled==='')?null:(Number.isFinite(Number(x.enrolled))?Number(x.enrolled):null),
+    waitlistAvailable:(x.waitlistAvailable===null||x.waitlistAvailable===undefined||x.waitlistAvailable==='')?null:(Number.isFinite(Number(x.waitlistAvailable))?Number(x.waitlistAvailable):null),
     delivery:x.scheduleType||x.delivery||'',
     linkedSections:x.linkedSections||[],
     meetings
@@ -430,6 +430,12 @@ function placedActivitiesForDay(schedule,d){
   }
   return placed.sort((a,b)=>a.start-b.start);
 }
+function totalCredits(schedule){
+  return schedule.reduce((sum,x)=>{
+    const c=Number(x.credits);
+    return sum+(Number.isFinite(c)?c:0);
+  },0);
+}
 function actualClassGapsForDay(schedule,d){
   const meetings=schedule.flatMap(x=>x.meetings
     .filter(m=>m.days.includes(d))
@@ -554,10 +560,10 @@ function render(){
   updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
   let a=rs[selected];
-  $('#calendar').innerHTML=a?`${resultReasons(a).length?`<div class="result-reasons">${resultReasons(a).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Viewing Schedule #${selected+1}</b><span>${a.campus} campus day${a.campus===1?'':'s'} · ${a.gaps.toFixed(1)} class-gap hrs · ${a.activityFits}/${activities.length} priorities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${calendarDayHtml(a.s,d)}</div>`).join('')}</div></div>`:'';
+  $('#calendar').innerHTML=a?`${resultReasons(a).length?`<div class="result-reasons">${resultReasons(a).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Viewing Schedule #${selected+1}</b><span>${totalCredits(a.s)} credits · ${a.campus} campus day${a.campus===1?'':'s'} · ${a.gaps.toFixed(1)} class-gap hrs · ${a.activityFits}/${activities.length} priorities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${calendarDayHtml(a.s,d)}</div>`).join('')}</div></div>`:'';
   $('#results').innerHTML=!liveReady
     ?'<div class="empty">Choose your courses, then click <b>Load classes from UVU</b> once.</div>'
-    :rs.length?rs.map((r,i)=>`<div class="result ${i===selected?'selected':''}" data-i="${i}"><div class="rank"><span>#${i+1}${i===0?' <span class="best-star" title="Best match">★</span>':''}</span>${i===selected?'<span class="viewing">VIEWING</span>':''}</div><div class="stats"><div><strong>${r.free.toFixed(1)}</strong><span>usable free hrs</span></div><div><strong>${r.activityFits}/${activities.length}</strong><span>activities fit</span></div><div><strong>${r.campus}</strong><span>campus days</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges">${professorHtml(x.professor)}${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null?'':`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seats':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join('')
+    :rs.length?rs.map((r,i)=>`<div class="result ${i===selected?'selected':''}" data-i="${i}"><div class="rank"><span>#${i+1}${i===0?' <span class="best-star" title="Best match">★</span>':''}</span>${i===selected?'<span class="viewing">VIEWING</span>':''}</div><div class="stats"><div><strong>${r.free.toFixed(1)}</strong><span>usable free hrs</span></div><div><strong>${r.activityFits}/${activities.length}</strong><span>activities fit</span></div><div><strong>${r.campus}</strong><span>campus days</span></div><div><strong>${totalCredits(r.s)}</strong><span>credits</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}${x.credits!=null?`<small style="display:block;font-weight:600;color:#8a7465;margin-top:2px">${esc(x.credits)} credits</small>`:''}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges">${professorHtml(x.professor)}${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null?'':`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seats':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join('')
     :'<div class="empty">No conflict-free schedule found with the current courses and filters.</div>';
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
 }
