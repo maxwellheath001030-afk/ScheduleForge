@@ -84,7 +84,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.2</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.3</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -122,6 +122,12 @@
 <div class="availability" id="availability"></div>
 <label>Campus → work commute</label><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div>
 <label>Minimum useful free-time block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
+<label>Class format preference</label><select id="deliveryPreference">
+<option value="any">No preference</option>
+<option value="inperson">Prefer in-person classes</option>
+<option value="online">Prefer online classes</option>
+</select>
+<div class="rangeval">This affects ranking only — it does not exclude the other format.</div>
 <label>Optimize for</label><select id="mode">
 <option value="balanced">Balanced schedule</option>
 <option value="free">Most usable free time</option>
@@ -195,8 +201,13 @@ function deliveryKind(sec){
   return 'inperson';
 }
 function deliveryAllowed(sec){
-  const pref=$('#deliveryMode')?.value||'any';
-  return pref==='any'||deliveryKind(sec)===pref;
+  // Delivery format is now a soft preference, not a hard exclusion.
+  return true;
+}
+function deliveryPreferenceScore(schedule){
+  const pref=$('#deliveryPreference')?.value||'any';
+  if(pref==='any') return 0;
+  return schedule.reduce((n,sec)=>n+(deliveryKind(sec)===pref?1:0),0);
 }
 function sectionAllowed(sec){
   if(!deliveryAllowed(sec)) return false;
@@ -259,7 +270,9 @@ function getResults(){
     else if(mode==='late')score=-m.early*100+m.activityScore*10+m.free;
     else if(mode==='work')score=m.work*100+m.activityScore*5-m.gaps*2;
     else score=m.activityScore*35+m.free*3-m.gaps*4-m.campus*5-m.early*8;
-    return{s,...m,score};
+    const formatMatches=deliveryPreferenceScore(s);
+    score+=formatMatches*20;
+    return{s,...m,formatMatches,score};
   }).sort((a,b)=>b.score-a.score).slice(0,10);
 }
 function normalizeLiveSection(x){
@@ -575,7 +588,7 @@ function saveSettings(){
       minShift:+($('#minShift')?.value||0),
       mode:$('#mode')?.value||'balanced',
       openOnly:false,
-      deliveryMode:$('#deliveryMode')?.value||'any'
+      deliveryPreference:$('#deliveryPreference')?.value||'any'
     }));
   }catch(e){}
 }
@@ -591,7 +604,7 @@ function restoreSettings(){
     if($('#minShift')&&Number.isFinite(x.minShift)) $('#minShift').value=x.minShift;
     if($('#mode')&&x.mode) $('#mode').value=x.mode;
     if($('#openOnly')&&typeof x.openOnly==='boolean') $('#openOnly').checked=x.openOnly;
-    if($('#deliveryMode')&&x.deliveryMode) $('#deliveryMode').value=x.deliveryMode;
+    if($('#deliveryPreference')) $('#deliveryPreference').value=x.deliveryPreference||x.deliveryMode||'any';
     if($('#commuteVal')) $('#commuteVal').textContent=$('#commute').value+' minutes';
     return true;
   }catch(e){return false}
@@ -690,6 +703,7 @@ $('#clearAllBtn').onclick=()=>{
   if($('#commuteVal')) $('#commuteVal').textContent='10 minutes';
   if($('#minShift')) $('#minShift').value=60;
   if($('#mode')) $('#mode').value='balanced';
+  $('#deliveryPreference').value='any';
   if($('#openOnly')) $('#openOnly').checked=true;
   if($('#deliveryMode')) $('#deliveryMode').value='any';
   $('#loadStatus').textContent='Cleared. Add the courses you want to schedule.';
@@ -709,6 +723,7 @@ $('#recalculateBtn').onclick=()=>{
 $('#commute').oninput=e=>{$('#commuteVal').textContent=e.target.value+' minutes';markNeedsRecalc()};
 $('#minShift').onchange=markNeedsRecalc;
 $('#mode').onchange=markNeedsRecalc;
+$('#deliveryPreference').onchange=markNeedsRecalc;
 $('#openOnly').onchange=markNeedsRecalc;
 $('#deliveryMode').onchange=markNeedsRecalc;
 
