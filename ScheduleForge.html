@@ -121,7 +121,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.21</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.22</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -154,7 +154,7 @@
 <label>University</label>
 <select id="schoolSelect">
   <option value="uvu" selected>Utah Valley University</option>
-  <option value="byu" disabled>Brigham Young University — coming soon</option>
+  <option value="byu">Brigham Young University</option>
 </select>
 <div class="activityHint">ScheduleForge is independent and is not affiliated with the selected university.</div>
 <label>Semester</label><h2 id="sideTerm" style="margin-top:4px">Spring 2027</h2>
@@ -845,7 +845,21 @@ function syncCommuteUI(){
 $('#commuteEnabled').onchange=()=>{syncCommuteUI();markNeedsRecalc()};
 syncCommuteUI();
 
+function setSchoolTerms(schoolId){
+  const select=$('#termSelect');
+  const current=select.value;
+  const options=schoolId==='byu'
+    ? ['Winter 2027','Spring 2027','Summer 2027','Fall 2027','Fall 2026']
+    : ['Spring 2027','Fall 2026'];
+  select.innerHTML=options.map(x=>`<option value="${x}">${x}</option>`).join('');
+  const preferred=options.includes(current)?current:(schoolId==='byu'?'Winter 2027':'Spring 2027');
+  select.value=preferred;
+  $('#termBig').textContent=preferred.toUpperCase();
+  $('#sideTerm').textContent=preferred;
+}
+
 $('#schoolSelect').onchange=()=>{
+  setSchoolTerms($('#schoolSelect').value);
   liveReady=false;DATA=[];loadedTerm='';loadedCourses=[];selected=0;
   $('#loadStatus').textContent=`University changed to ${currentSchool().name}. Load classes to continue.`;
   checkUVU();render();

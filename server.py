@@ -18,7 +18,7 @@ TERM_ENDPOINTS=[
 def clean(s): return re.sub(r"\s+"," ",s or "").strip()
 
 def get(url):
-    r=requests.get(url,timeout=(5,8),headers={"User-Agent":"ScheduleForge/1.5 UVU public class search"})
+    r=requests.get(url,timeout=(5,8),headers={"User-Agent":"ScheduleForge/2.0 public class planner"})
     r.raise_for_status()
     return r.text
 
@@ -86,7 +86,7 @@ def seat_detail(term,crn):
         return cached["data"]
     url=BASE+DETAIL+"?"+urlencode({"crn_in":crn,"term_in":term})
     try:
-        r=requests.get(url,timeout=(2.5,4.0),headers={"User-Agent":"ScheduleForge/1.7 UVU public class search"})
+        r=requests.get(url,timeout=(2.5,4.0),headers={"User-Agent":"ScheduleForge/2.0 public class planner"})
         r.raise_for_status()
         text=clean(BeautifulSoup(r.text,"html.parser").get_text(" ",strip=True))
         m=re.search(r"Registration Availability.*?Capacity\s+Actual\s+Remaining\s+Seats\s+(\d+)\s+(\d+)\s+(\d+)",text,re.I|re.S)
@@ -284,7 +284,6 @@ def _resolve_live_term_live(semester):
         "termsSeen": uniq,
         "diagnostics": diagnostics
     }
-@app.get("/health")
 def resolve_live_term(semester):
     semester=(semester or "").strip()
     # Spring 2027 has already been verified against UVU Banner.
@@ -308,6 +307,7 @@ def resolve_live_term(semester):
     return {"verified": False, "semester": semester,
             "error": "UVU term discovery is temporarily unavailable and no verified fallback is stored for this semester."}
 
+@app.get("/health")
 def health():
     return jsonify(status="ok",app="ScheduleForge"),200
 
@@ -467,6 +467,184 @@ def validate_course():
         return jsonify({"ok": True, "status": "invalid_course", "course": f"{subj} {num}", "suggestions": suggestions[:8]})
     except Exception as e:
         return jsonify({"ok": False, "status": "unverified", "course": course, "error": str(e)}), 502
+
+
+# ---------------------------------------------------------------------------
+# BYU public Class Search adapter
+# Kept fully separate from UVU so failures/format changes cannot affect UVU.
+# BYU year-term convention used by the public schedule:
+# Winter=1, Spring=3, Summer=4, Fall=5.
+# ---------------------------------------------------------------------------
+BYU_CLASS_SEARCH="https://commtech.byu.edu/noauth/classSchedule/index.php"
+BYU_TERM_SUFFIX={"Winter":"1","Spring":"3","Summer":"4","Fall":"5"}
+
+def byu_term_code(semester):
+    m=re.fullmatch(r"(Winter|Spring|Summer|Fall)\s+(\d{4})",(semester or "").strip(),re.I)
+    if not m:return None
+    season=m.group(1).title()
+    return f"{m.group(2)}{BYU_TERM_SUFFIX[season]}"
+
+def byu_days(value):
+    s=clean(value).replace("Th","R").replace("TH","R")
+    # BYU uses TTh; after replacement this becomes TR.
+    out=[]
+    for ch in s.upper():
+        if ch in "MTWRFS" and ch not in out: out.append(ch)
+    return out
+
+def byu_clock(value):
+    value=clean(value)
+    if not value or value.lower() in ("tba","arr","arranged","none","-"): return None
+    m=re.match(r"(\d{1,2}):(\d{2})\s*([ap])m",value,re.I)
+    if not m:return None
+    h,mi,ap=int(m.group(1)),int(m.group(2)),m.group(3).lower()
+    if h==12:h=0
+    if ap=="p":h+=12
+    return f"{h:02d}:{mi:02d}"
+
+def byu_delivery(mode):
+    t=clean(mode).lower()
+    if any(x in t for x in ("online","on demand","asynchronous","remote")): return "Online"
+    if any(x in t for x in ("hybrid","blended")): return "Hybrid"
+    return "Face to Face"
+
+def parse_byu_search(html,subject,num,semester):
+    soup=BeautifulSoup(html,"html.parser")
+    wanted_term=byu_term_code(semester)
+    rows=[]
+    # BYU's public result table has these stable visible headers.
+    for table in soup.find_all("table"):
+        headers=[clean(x.get_text(" ",strip=True)) for x in table.find_all("th")]
+        low=[h.lower() for h in headers]
+        if not headers or "section" not in low or "instructor" not in low or "days" not in low:
+            continue
+        for tr in table.find_all("tr"):
+            cells=[clean(x.get_text(" ",strip=True)) for x in tr.find_all(["td","th"])]
+            if len(cells)<len(headers) or cells==headers: continue
+            d={headers[i].lower():cells[i] for i in range(min(len(headers),len(cells)))}
+            term=clean(d.get("term",""))
+            # Accept either the BYU numeric year-term or a human-readable matching term.
+            if wanted_term and term and wanted_term not in term:
+                season,year=semester.split()
+                if season.lower() not in term.lower() or year not in term:
+                    continue
+            section=clean(d.get("section",""))
+            if not section: continue
+            st=byu_clock(d.get("start","")); en=byu_clock(d.get("end",""))
+            days=byu_days(d.get("days",""))
+            location=clean(d.get("location",""))
+            mode=clean(d.get("mode",""))
+            credits=None
+            try: credits=float(d.get("credits",""))
+            except: pass
+            if isinstance(credits,float) and credits.is_integer(): credits=int(credits)
+            available=None
+            am=re.search(r"-?\d+",d.get("available","") or "")
+            if am: available=max(0,int(am.group()))
+            wait=None
+            wm=re.search(r"-?\d+",d.get("waitlist","") or "")
+            if wm: wait=max(0,int(wm.group()))
+            meetings=[]
+            if st and en and days:
+                meetings=[{"type":clean(d.get("type","")) or "Class","days":days,
+                           "start":st,"end":en,"location":location,"dateRange":semester}]
+            rows.append({
+                "course":f"{subject.upper()} {num.upper()}","subject":subject.upper(),
+                "courseNumber":num.upper(),"title":"","section":section,
+                "crn":f"BYU-{wanted_term or term}-{subject.upper()}-{num.upper()}-{section}",
+                "credits":credits,"professor":clean(d.get("instructor","")) or "TBA",
+                "primaryInstructor":clean(d.get("instructor","")) or None,
+                "instructors":[clean(d.get("instructor",""))] if clean(d.get("instructor","")) else [],
+                "scheduleType":mode,"delivery":byu_delivery(mode),"meetings":meetings,
+                "capacity":None,"enrolled":None,"seatsAvailable":available,
+                "waitlistCapacity":None,"waitlistEnrolled":None,"waitlistAvailable":wait,
+                "linkedSections":[],"seatStatus":"available" if (available or 0)>0 else ("full" if available==0 else "unknown"),
+                "schoolSectionId":section,"byuTerm":term
+            })
+    # Multiple table rows can represent meeting components of the same section.
+    merged={}
+    for row in rows:
+        key=row["section"]
+        if key not in merged: merged[key]=row
+        else:
+            merged[key]["meetings"].extend(row["meetings"])
+            if merged[key]["professor"]=="TBA" and row["professor"]!="TBA":
+                merged[key]["professor"]=row["professor"]
+                merged[key]["primaryInstructor"]=row["primaryInstructor"]
+                merged[key]["instructors"]=row["instructors"]
+    return list(merged.values())
+
+def fetch_byu_course(subject,num,semester):
+    term=byu_term_code(semester)
+    if not term: raise ValueError("Use a BYU semester like Winter 2027, Spring 2027, Summer 2027, or Fall 2027.")
+    # Public Class Search supports a normal human course query. yearTerm pins the requested term.
+    params={"search":f"{subject} {num}","yearTerm":term}
+    r=requests.get(BYU_CLASS_SEARCH,params=params,timeout=(5,12),
+                   headers={"User-Agent":"Mozilla/5.0 ScheduleForge/2.0 public class planner"})
+    r.raise_for_status()
+    rows=parse_byu_search(r.text,subject,num,semester)
+    return r.url,rows
+
+@app.get("/api/byu/status")
+def byu_status():
+    semester=(request.args.get("semester") or "Winter 2027").strip()
+    term=byu_term_code(semester)
+    if not term:
+        return jsonify(status="unverified",source="BYU public Class Search",semester=semester,
+                       message="That is not a recognized BYU semester."),400
+    try:
+        r=requests.get(BYU_CLASS_SEARCH,params={"yearTerm":term},timeout=(5,10),
+                       headers={"User-Agent":"Mozilla/5.0 ScheduleForge/2.0 public class planner"})
+        r.raise_for_status()
+        text=clean(BeautifulSoup(r.text,"html.parser").get_text(" ",strip=True))
+        if "Class Search" not in text:
+            raise ValueError("BYU Class Search did not return the expected public page.")
+        return jsonify(status="live",source="BYU public Class Search",semester=semester,
+                       bannerTermCode=term,bannerLabel=semester)
+    except Exception as e:
+        return jsonify(status="unavailable",source="BYU public Class Search",
+                       semester=semester,error=str(e)),503
+
+@app.get("/api/byu/course")
+def byu_course():
+    semester=(request.args.get("semester") or "Winter 2027").strip()
+    q=(request.args.get("course") or "").strip().upper()
+    # BYU subjects may contain spaces, e.g. ME EN 273. Split at the final course number.
+    m=re.fullmatch(r"(.+?)\s*([0-9]{2,4}[A-Z]?)",q)
+    if not m:return jsonify(error='Use a BYU course like "ME EN 273" or "ACC 200".'),400
+    subject,num=clean(m.group(1)),m.group(2)
+    try:
+        url,rows=fetch_byu_course(subject,num,semester)
+        if not rows:
+            return jsonify(error="BYU returned no parsed sections. This is treated as unverified, not as zero offerings.",
+                           semester=semester,course=q,sourceUrl=url),502
+        schedulable=[]
+        for row in rows:
+            # Timed sections are immediately schedulable. Pure online/asynchronous sections
+            # are also safe because they create no time conflict.
+            if row["meetings"] or row["delivery"]=="Online":
+                schedulable.append(row)
+        return jsonify(source="BYU public Class Search",semester=semester,
+                       associatedTerm=byu_term_code(semester),course=q,
+                       sections=schedulable,parsedSections=len(rows))
+    except Exception as e:
+        return jsonify(error=str(e),semester=semester,course=q),502
+
+@app.get("/api/byu/seats")
+def byu_seats():
+    # Seat counts are already present in BYU's public result rows, so no second
+    # network pass is needed. The frontend may safely call this endpoint anyway.
+    return jsonify(seats=[],source="BYU public Class Search",inline=True),200
+
+@app.get("/api/byu/validate")
+def byu_validate():
+    course=(request.args.get("course") or "").strip().upper()
+    m=re.fullmatch(r"(.+?)\s*([0-9]{2,4}[A-Z]?)",course)
+    if not m:
+        return jsonify(ok=True,status="invalid_course",course=course,suggestions=[])
+    # Definitive semester availability is checked by /api/byu/course.
+    return jsonify(ok=True,status="valid",course=f"{clean(m.group(1))} {m.group(2)}",
+                   suggestions=[],validation="format")
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), debug=False)
