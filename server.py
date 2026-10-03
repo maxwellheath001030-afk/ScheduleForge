@@ -233,6 +233,36 @@ def scheduleforge_page():
 def live_test_page():
     return send_from_directory(APP_DIR, "live-test.html")
 
+
+@app.get("/api/uvu/debug")
+def uvu_debug():
+    semester=request.args.get("semester","Spring 2027")
+    q=request.args.get("course","ME 3335").strip().upper()
+    resolved=resolve_live_term(semester)
+    if not resolved.get("verified"):
+        return jsonify(error="Semester could not be verified.",diagnostic=resolved),503
+    parts=q.split()
+    if len(parts)!=2:
+        return jsonify(error='Use a course like "ME 3335".'),400
+    subject,num=parts
+    term=resolved["code"]
+    url=BASE+LIST+"?"+urlencode({"crse_in":num,"schd_in":"%","subj_in":subject,"term_in":term})
+    try:
+        text=BeautifulSoup(get(url),"html.parser").get_text("\n",strip=True)
+        pat=re.compile(r"(?m)^(.+?)\s+-\s+(\d{4,6})\s+-\s+("+re.escape(subject)+r")\s+("+re.escape(num)+r")\s+-\s+([A-Z0-9]+)\s*$",re.I)
+        matches=list(pat.finditer(text)); sections=[]
+        for i,m in enumerate(matches):
+            title,crn,subj,course_num,section=m.groups()
+            block=text[m.end():matches[i+1].start() if i+1<len(matches) else len(text)]
+            lines=[clean(x) for x in block.splitlines() if clean(x)]
+            interesting=[x for x in lines if re.search(r"instructor|primary|\(P\)|assigned|staff",x,re.I)]
+            sections.append({"section":section,"crn":crn,"title":clean(title),
+                             "instructorLikeLines":interesting[:20],"rawPreview":lines[:80]})
+        return jsonify(source="UVU public Banner",semester=semester,bannerTermCode=term,
+                       course=q,sectionCount=len(sections),sections=sections)
+    except Exception as e:
+        return jsonify(error=str(e),semester=semester,course=q),502
+
 @app.get("/api/uvu/course")
 def course():
     semester=request.args.get("semester","Spring 2027")
