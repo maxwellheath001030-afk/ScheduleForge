@@ -73,6 +73,26 @@ def parse_meetings(text):
         meetings.append({"type":clean(meeting_type) or "Class","days":list(days.upper()),"start":clock(st),"end":clock(en),"location":clean(where),"dateRange":clean(dates)})
     return meetings
 
+
+def parse_listing_seats(block):
+    # UVU class-search listing wording: "X of Y seats ..." where X is seats remaining.
+    patterns=[
+        r"\b(\d+)\s+of\s+(\d+)\s+seats?\b",
+        r"\bSeats?\s*:?\s*(\d+)\s+of\s+(\d+)\b",
+    ]
+    for pat in patterns:
+        m=re.search(pat,block,re.I)
+        if m:
+            remaining=int(m.group(1)); capacity=int(m.group(2))
+            remaining=max(0,min(remaining,capacity))
+            return {
+                "capacity":capacity,
+                "enrolled":max(0,capacity-remaining),
+                "seatsAvailable":remaining,
+                "seatStatus":"available" if remaining>0 else "full"
+            }
+    return {"capacity":None,"enrolled":None,"seatsAvailable":None,"seatStatus":"unknown"}
+
 def parse_listing(html,subject,course,semester):
     soup=BeautifulSoup(html,"html.parser"); text=soup.get_text("\n",strip=True)
     assoc=re.search(r"Associated Term:\s*([^\n]+)",text,re.I)
@@ -87,15 +107,16 @@ def parse_listing(html,subject,course,semester):
         block=text[m.end():ms[i+1].start() if i+1<len(ms) else len(text)]
         instructors=parse_instructors(block)
         schedule_type=parse_schedule_type(block)
+        seat=parse_listing_seats(block)
         rows.append({
             "course":f"{subj.upper()} {num.upper()}","subject":subj.upper(),"courseNumber":num.upper(),
             "title":clean(title),"section":section,"crn":crn,"credits":parse_credits(block),
             "professor":instructors[0] if instructors else "TBA",
             "primaryInstructor":instructors[0] if instructors else None,"instructors":instructors,
             "scheduleType":schedule_type,"delivery":schedule_type,"meetings":parse_meetings(block),
-            "capacity":None,"enrolled":None,"seatsAvailable":None,
+            "capacity":seat["capacity"],"enrolled":seat["enrolled"],"seatsAvailable":seat["seatsAvailable"],
             "waitlistCapacity":None,"waitlistEnrolled":None,"waitlistAvailable":None,
-            "linkedSections":[],"seatStatus":"unknown"
+            "linkedSections":[],"seatStatus":seat["seatStatus"]
         })
     return actual,rows
 
@@ -297,6 +318,16 @@ def course():
         if not rows:
             return jsonify(error="UVU response contained no parsed sections. This is treated as unverified, not as zero offerings.",
                            semester=semester,associatedTerm=actual,sourceUrl=url),502
+        # ScheduleForge only uses sections that can actually be placed on a calendar.
+        # Exclude TBA/unscheduled sections and sections without an assigned instructor.
+        rows=[
+            row for row in rows
+            if row.get("meetings")
+            and all(m.get("start") and m.get("end") and m.get("days") for m in row.get("meetings",[]))
+            and row.get("primaryInstructor")
+            and str(row.get("primaryInstructor")).strip().upper() not in {"TBA","STAFF","INSTRUCTOR TBA"}
+        ]
+
         # Do not fetch every section's Banner detail page here. Some UVU detail
         # pages are slow enough to exceed Render/Gunicorn request limits.
         # The listing parser already provides the schedule-critical fields.

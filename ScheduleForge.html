@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.8.1</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.12.1</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -101,7 +101,7 @@
 <option value="days">Fewest campus days</option>
 <option value="late">Avoid early classes</option>
 <option value="work">Best for work</option>
-</select><label class="checkline"><input id="openOnly" type="checkbox"> Only use sections with seats available</label>
+</select>
 
 <p class="note" id="dataNote">Your courses and preferences are saved automatically in this browser. Load sections once, then tune the rest of your week without waiting on UVU again.</p></aside>
 <section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><b id="shown"></b></div><div id="calendar"></div><div id="results"></div></section>
@@ -216,7 +216,7 @@ function metrics(s){
 }
 function getResults(){
   if(!liveReady)return[];
-  let openOnly=$('#openOnly').checked;
+  let openOnly=false;
   let groups=courses.map(c=>DATA.filter(x=>x.course===c&&(!openOnly||x.seatsAvailable===null||x.seatsAvailable>0)));
   if(groups.some(g=>!g.length))return[];
   let mode=$('#mode').value;
@@ -293,6 +293,47 @@ async function validateCourseCode(c){
     return await safeJsonResponse(r,'Course validation');
   }catch(e){return {status:'unverified'}}
 }
+function friendlyCourseLoadError(course, semester, status, data){
+  const raw=String((data&&data.error)||'').trim();
+
+  // Banner returned a page but our parser found no sections. Do not claim the
+  // course is invalid; give the student the two likely, actionable possibilities.
+  if(raw.includes('no parsed sections')){
+    return {
+      title:`${course} couldn't be loaded for ${semester}`,
+      detail:`Check that the course abbreviation and number are correct. If they are correct, this course may not have sections listed for ${semester}.`,
+      kind:'course'
+    };
+  }
+
+  if(status===404){
+    return {
+      title:`${course} couldn't be found`,
+      detail:`Check the course abbreviation and number, then try again.`,
+      kind:'course'
+    };
+  }
+
+  if(status>=500){
+    return {
+      title:`We couldn't check ${course} right now`,
+      detail:`UVU's course service returned an error. Try loading the classes again in a moment.`,
+      kind:'service'
+    };
+  }
+
+  return {
+    title:`${course} couldn't be loaded`,
+    detail:raw||`Check the course code and try again.`,
+    kind:'course'
+  };
+}
+
+function showCourseLoadError(info){
+  $('#results').innerHTML=`<div class="empty"><strong style="display:block;color:#8f3d08;font-size:16px;margin-bottom:8px">${esc(info.title)}</strong><span style="display:block;max-width:560px;margin:auto;line-height:1.55">${esc(info.detail)}</span></div>`;
+  $('#calendar').innerHTML='';
+  $('#bestMetric').textContent='—';
+}
 async function loadLiveCourses(){
   if(loading)return;
   if(!courses.length){alert('Add at least one course first.');return}
@@ -300,31 +341,53 @@ async function loadLiveCourses(){
   const btn=$('#generateBtn'), term=$('#termSelect').value;
   btn.disabled=true; btn.textContent='Loading classes from UVU…';
   $('#loadStatus').textContent='';
+  let all=[], failed=null;
   try{
-    // Load each selected course directly. /api/uvu/course is the source of truth;
-    // do not block loading on the separate /api/uvu/status diagnostic endpoint.
-    let all=[];
     for(let i=0;i<courses.length;i++){
       const c=normalizeCourseInput(courses[i])||courses[i];
       $('#loadStatus').textContent=`Loading ${c} from UVU… (${i+1}/${courses.length})`;
       const r=await fetch(`/api/uvu/course?semester=${encodeURIComponent(term)}&course=${encodeURIComponent(c)}`,{cache:'no-store'});
       const j=await safeJsonResponse(r,'UVU');
-      if(!r.ok)throw new Error(`${c}: ${j.error||'UVU lookup failed'}`);
+      if(!r.ok){
+        failed=friendlyCourseLoadError(c,term,r.status,j);
+        break;
+      }
       const rows=(j.sections||[]).map(normalizeLiveSection);
-      if(!rows.length)throw new Error(`${c}: UVU returned no usable sections.`);
+      if(!rows.length){
+        failed={
+          title:`${c} couldn't be loaded for ${term}`,
+          detail:`Check that the course abbreviation and number are correct. If they are correct, this course may not have sections listed for ${term}.`,
+          kind:'course'
+        };
+        break;
+      }
       all.push(...rows);
     }
+
+    if(failed){
+      DATA=all;
+      liveReady=false;
+      const loadedCount=new Set(all.map(x=>x.course)).size;
+      $('#loadStatus').textContent=loadedCount
+        ? `${loadedCount} course${loadedCount===1?'':'s'} loaded successfully. ${failed.title}.`
+        : failed.title+'.';
+      showCourseLoadError(failed);
+      return;
+    }
+
     DATA=all; liveReady=true; loadedTerm=term; loadedCourses=[...courses];
-    $('#loadStatus').textContent=`Loaded ${DATA.length} live sections across ${courses.length} courses.`;
+    $('#loadStatus').textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${DATA.length} sections loaded`;
     $('#dataStatus').textContent=`${term.toUpperCase()} · ${DATA.length} LIVE SECTIONS`;
-    $('#dataNote').textContent=`Live UVU data loaded for ${courses.join(', ')}. Click Generate again after changing the course list or semester.`;
+    $('#dataNote').textContent=`Live UVU data loaded for ${courses.join(', ')}. Use Generate / Recalculate after changing preferences.`;
     render();
   }catch(err){
-    DATA=[]; liveReady=false;
-    $('#loadStatus').textContent='Could not load classes: '+err.message;
-    $('#results').innerHTML=`<div class="empty">${esc(err.message)}</div>`;
-    $('#calendar').innerHTML='';
-    $('#bestMetric').textContent='—';
+    DATA=all; liveReady=false;
+    const info={
+      title:'We couldn’t finish loading your classes',
+      detail:'UVU returned an unexpected response. Please try again in a moment.'
+    };
+    $('#loadStatus').textContent=info.title+'.';
+    showCourseLoadError(info);
   }finally{
     loading=false; btn.disabled=false; btn.textContent='① Load classes from UVU';
   }
@@ -386,7 +449,7 @@ function saveSettings(){
       commute:+($('#commute')?.value||0),
       minShift:+($('#minShift')?.value||0),
       mode:$('#mode')?.value||'balanced',
-      openOnly:!!$('#openOnly')?.checked,
+      openOnly:false,
       deliveryMode:$('#deliveryMode')?.value||'any'
     }));
   }catch(e){}
