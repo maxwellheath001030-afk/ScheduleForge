@@ -136,7 +136,17 @@ def extract_terms(obj):
     walk(obj)
     return list({(x["code"],x["label"]):x for x in out}.values())
 
-def resolve_live_term(semester):
+
+# Cache successful term resolutions so transient UVU term-page failures do not
+# break subsequent course loads in the same server process.
+TERM_CACHE = {}
+# Verified UVU Banner term codes we have already confirmed while developing
+# ScheduleForge. Live discovery is still attempted first.
+VERIFIED_TERM_FALLBACKS = {
+    "Spring 2027": "202720",
+}
+
+def _resolve_live_term_live(semester):
     s=requests.Session()
     headers={"User-Agent":"Mozilla/5.0 ScheduleForge/1.5","Accept":"text/html,application/xhtml+xml"}
     landing=s.get(TERM_PAGE,timeout=25,headers=headers)
@@ -214,6 +224,26 @@ def resolve_live_term(semester):
         "diagnostics": diagnostics
     }
 @app.get("/health")
+def resolve_live_term(semester):
+    semester=(semester or "").strip()
+    if semester in TERM_CACHE:
+        return {"verified": True, "code": TERM_CACHE[semester], "source": "cache"}
+    try:
+        live=_resolve_live_term_live(semester)
+        if live and live.get("verified") and live.get("code"):
+            TERM_CACHE[semester]=live["code"]
+            live["source"]="UVU live term discovery"
+            return live
+    except Exception:
+        pass
+    code=VERIFIED_TERM_FALLBACKS.get(semester)
+    if code:
+        TERM_CACHE[semester]=code
+        return {"verified": True, "code": code, "source": "verified fallback"}
+    return {"verified": False, "semester": semester,
+            "error": "UVU term discovery is temporarily unavailable and no verified fallback is stored for this semester."}
+
+
 def health():
     return jsonify(status="ok",app="ScheduleForge"),200
 
