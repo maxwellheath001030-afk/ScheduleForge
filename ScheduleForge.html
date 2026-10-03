@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.7</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.8</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -84,7 +84,7 @@
 <section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, add the activities that matter to you, and compare schedules that fit the rest of your life.</p></div><div class="metric"><small id="bestMetricLabel">BEST RESULT</small><strong id="bestMetric">—</strong><span id="bestMetricSub">schedule fit</span></div></section>
 <div class="layout">
 <aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
-<label>Courses</label><div class="add"><div class="course-search-wrap"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><div id="courseSuggestions" class="course-suggestions"></div></div><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button><button id="clearAllBtn" type="button" style="width:100%;margin-top:7px;padding:8px;border:1px solid #ddcfc2;border-radius:9px;background:#fff;color:#8a4a20;font-weight:750;cursor:pointer">Clear selections / Start over</button>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button><button id="clearAllBtn" type="button" style="width:100%;margin-top:7px;padding:8px;border:1px solid #ddcfc2;border-radius:9px;background:#fff;color:#8a4a20;font-weight:750;cursor:pointer">Clear selections / Start over</button>
 <div id="loadedSummary" class="loaded-summary"></div>
 <div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
@@ -301,8 +301,8 @@ async function loadLiveCourses(){
   btn.disabled=true; btn.textContent='Loading classes from UVU…';
   $('#loadStatus').textContent='';
   try{
-    const ok=await checkUVU();
-    if(!ok)throw new Error('UVU term could not be verified.');
+    // Load each selected course directly. /api/uvu/course is the source of truth;
+    // do not block loading on the separate /api/uvu/status diagnostic endpoint.
     let all=[];
     for(let i=0;i<courses.length;i++){
       const c=normalizeCourseInput(courses[i])||courses[i];
@@ -321,7 +321,7 @@ async function loadLiveCourses(){
     render();
   }catch(err){
     DATA=[]; liveReady=false;
-    $('#loadStatus').textContent='Could not generate: '+err.message;
+    $('#loadStatus').textContent='Could not load classes: '+err.message;
     $('#results').innerHTML=`<div class="empty">${esc(err.message)}</div>`;
     $('#calendar').innerHTML='';
     $('#bestMetric').textContent='—';
@@ -477,36 +477,6 @@ $('#addActivity').onclick=()=>{
   renderActivities();
   markNeedsRecalc();
 };
-let courseSearchTimer=null,courseSearchAbort=null;
-async function updateCourseSuggestions(){
-  const input=$('#courseInput'),box=$('#courseSuggestions');
-  const raw=input.value.trim();
-  if(raw.length<2){box.classList.remove('show');box.innerHTML='';return}
-  box.innerHTML='<div style="padding:10px;font-size:10px;color:#81766d">Searching UVU courses…</div>';box.classList.add('show');
-  if(courseSearchAbort)courseSearchAbort.abort();
-  courseSearchAbort=new AbortController();
-  try{
-    const r=await fetch(`/api/uvu/course-search?q=${encodeURIComponent(raw)}`,{signal:courseSearchAbort.signal});
-    const j=await safeJsonResponse(r,'Course search');
-    const rows=j.results||[];
-    if(!rows.length){box.innerHTML='<div style="padding:10px;font-size:10px;color:#81766d">No matching course codes found — keep typing or check the subject abbreviation</div>';box.classList.add('show');return}
-    box.innerHTML=rows.map(x=>`<button type="button" class="course-suggestion" data-course="${esc(x.course)}"><b>${esc(x.course)}</b>${x.title?`<span>${esc(x.title)}</span>`:''}</button>`).join('');
-    box.classList.add('show');
-    box.querySelectorAll('.course-suggestion').forEach(b=>b.onclick=()=>{
-      input.value=b.dataset.course;
-      box.classList.remove('show');
-      $('#addCourse').click();
-    });
-  }catch(e){if(e.name!=='AbortError')box.classList.remove('show')}
-}
-$('#courseInput').oninput=()=>{
-  clearTimeout(courseSearchTimer);
-  courseSearchTimer=setTimeout(updateCourseSuggestions,220);
-};
-$('#courseInput').onfocus=()=>{if($('#courseInput').value.trim().length>=2)updateCourseSuggestions()};
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.course-search-wrap'))$('#courseSuggestions').classList.remove('show');
-});
 $('#addCourse').onclick=()=>{
   let i=$('#courseInput');
   let c=normalizeCourseInput(i.value);
