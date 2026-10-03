@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ScheduleForge — UVU Prototype</title>
+<title>ScheduleForge — Student Schedule Optimizer</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f8f6f2;color:#26231f;font-family:Arial,sans-serif}header{height:70px;background:#fff;border-bottom:1px solid #e6ded4;display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;color:#82776d;font-weight:500}.pill{background:#fff0df;color:#9a4d12;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:700}main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:end;margin-bottom:28px}.hero h1{font-size:44px;line-height:1.05;margin:8px 0}.hero h1 span{color:#e66a12}.hero p{color:#766d65;line-height:1.55}.eyebrow{font-size:11px;font-weight:800;color:#e66a12;letter-spacing:.08em}.metric{background:#352a22;color:white;border-radius:17px;padding:22px}.metric small{font-size:10px;color:#e6cdb9}.metric strong{display:block;font-size:36px;margin:7px 0}.metric span{font-size:11px;color:#e6cdb9}.layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.panel{background:white;border:1px solid #e6ded4;border-radius:16px;padding:22px}aside{position:static}h2{margin:0 0 17px;font-size:21px}label{display:block;font-size:12px;font-weight:700;color:#685f57;margin:17px 0 7px}.add{display:flex;gap:7px}.add input,select{width:100%;padding:10px;border:1px solid #ddd2c7;border-radius:8px;background:white}.add button{width:42px;border:0;border-radius:8px;background:#d85f0b;color:white;font-size:20px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{border:0;border-radius:7px;background:#fff3e8;color:#8a4615;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer}.availability{display:flex;flex-direction:column;gap:6px}.daywin{display:grid;grid-template-columns:40px 1fr 10px 1fr;gap:5px;align-items:center}.daywin button{border:0;border-radius:7px;padding:8px 3px;font-size:10px;font-weight:800;background:#ffead8;color:#d85f0b}.daywin button.off{background:#eee;color:#999;text-decoration:line-through}.daywin input{min-width:0;width:100%;padding:6px 2px;border:1px solid #ddd2c7;border-radius:6px;font-size:10px}.range{width:100%;accent-color:#d85f0b}.rangeval{text-align:right;color:#d85f0b;font-size:11px;font-weight:700}.note{font-size:11px;line-height:1.55;color:#91877e;margin-top:18px}.resultHead{display:flex;justify-content:space-between;border-bottom:1px solid #e9eeeb;padding-bottom:14px}.resultHead small{font-size:10px;color:#82776e;letter-spacing:.1em}.calendar{border:1px solid #e8ded4;border-radius:13px;margin:16px 0;overflow:hidden}.calTitle{background:#352a22;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;font-size:12px}.week{display:grid;grid-template-columns:repeat(5,1fr);min-height:150px}.daycol{padding:9px 6px;border-right:1px solid #eee5dc}.daycol:last-child{border:0}.daycol>b{font-size:10px;color:#68776f}.event{margin-top:7px;background:#fff0e3;border-left:3px solid #ef7a22;border-radius:5px;padding:6px}.event.activity{background:#f1f3f5;border-left-color:#8b949e;color:#4b5560}.event.activity strong{color:#374151}
 .day-empty{margin-top:12px;padding:18px 6px;text-align:center;color:#a3988e;font-size:10px;background:#fcfaf7;border-radius:7px}
@@ -97,7 +97,18 @@
 .saved-view{display:none}
 .saved-view.active{display:block}
 .builder-view.hidden{display:none}
-.save-plan-btn{border:0;border-radius:9px;background:#d85f0b;color:#fff;padding:9px 13px;font-weight:800;cursor:pointer}
+.save-plan-btn{border:1px solid #e7b88e;border-radius:9px;background:#fff;color:#b64c05;padding:8px 12px;font-weight:800;cursor:pointer}
+.save-plan-btn.saved{background:#f6f2ed;color:#766a60;border-color:#ddd3ca}
+.setting-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}
+.setting-toggle label{margin:0}
+.switch{position:relative;width:38px;height:22px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.slider-toggle{position:absolute;inset:0;background:#d8d0c9;border-radius:20px;cursor:pointer;transition:.18s}
+.slider-toggle:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:white;border-radius:50%;box-shadow:0 1px 3px #0003;transition:.18s}
+.switch input:checked+.slider-toggle{background:#d85f0b}
+.switch input:checked+.slider-toggle:before{transform:translateX(16px)}
+.commute-controls.disabled{opacity:.4;pointer-events:none}
+
 .saved-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 .saved-card{border:1px solid #e6ded4;border-radius:14px;background:#fff;padding:17px}
 .saved-card h3{margin:0 0 4px;font-size:17px}
@@ -110,7 +121,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.19</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.21</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -139,8 +150,15 @@
 </section>
 <section class="hero"><div><div class="eyebrow">STUDENT SCHEDULE OPTIMIZER</div><h1>Make your classes fit <span>your life.</span></h1><p>Choose the courses you need, add the activities that matter to you, and compare schedules that fit the rest of your life.</p></div><div class="metric"><small id="bestMetricLabel">BEST RESULT</small><strong id="bestMetric">—</strong><span id="bestMetricSub">schedule fit</span></div></section>
 <div class="layout">
-<aside class="panel"><div class="eyebrow">SEMESTER SETTINGS</div><h2 id="sideTerm">Spring 2027</h2>
-<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes from UVU</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button><button id="clearAllBtn" type="button" style="width:100%;margin-top:7px;padding:8px;border:1px solid #ddcfc2;border-radius:9px;background:#fff;color:#8a4a20;font-weight:750;cursor:pointer">Clear selections / Start over</button>
+<aside class="panel"><div class="eyebrow">SCHEDULE SETTINGS</div>
+<label>University</label>
+<select id="schoolSelect">
+  <option value="uvu" selected>Utah Valley University</option>
+  <option value="byu" disabled>Brigham Young University — coming soon</option>
+</select>
+<div class="activityHint">ScheduleForge is independent and is not affiliated with the selected university.</div>
+<label>Semester</label><h2 id="sideTerm" style="margin-top:4px">Spring 2027</h2>
+<label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button><button id="clearAllBtn" type="button" style="width:100%;margin-top:7px;padding:8px;border:1px solid #ddcfc2;border-radius:9px;background:#fff;color:#8a4a20;font-weight:750;cursor:pointer">Clear selections / Start over</button>
 <div id="loadedSummary" class="loaded-summary"></div>
 <div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
 <label>Activities & priorities</label>
@@ -151,7 +169,9 @@
 <div class="activityHint">These are hard limits. Classes outside these times are excluded.</div>
 <div class="quickPresets"><button type="button" data-preset="any">Any time</button><button type="button" data-preset="nomorning">No mornings</button><button type="button" data-preset="noevening">No evenings</button><button type="button" data-preset="weekday">8 AM–5 PM</button></div>
 <div class="availability" id="availability"></div>
-<label>Campus → work commute</label><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div>
+<div class="setting-toggle"><label>Campus → work commute</label><label class="switch" aria-label="Use campus to work commute"><input id="commuteEnabled" type="checkbox"><span class="slider-toggle"></span></label></div>
+<div class="activityHint">Adds travel time around classes when evaluating usable work blocks.</div>
+<div class="commute-controls disabled" id="commuteControls"><input class="range" id="commute" type="range" min="0" max="45" step="5" value="10"><div class="rangeval" id="commuteVal">10 minutes</div></div>
 <label>Minimum useful free-time block</label><select id="minShift"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
 <label>Class format preference</label><select id="deliveryPreference">
 <option value="any">No preference</option>
@@ -169,8 +189,8 @@
 <option value="work">Best for work</option>
 </select>
 
-<p class="note" id="dataNote">Your courses and preferences are saved automatically in this browser. Load sections once, then tune the rest of your week without waiting on UVU again.</p></aside>
-<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><div style="display:flex;align-items:center;gap:10px"><b id="shown"></b><button id="savePlanBtn" class="save-plan-btn" type="button" style="display:none">Save viewed plan</button></div></div><div id="calendar"></div><div id="results"></div></section>
+<p class="note" id="dataNote">Your courses and preferences are saved automatically in this browser. Load sections once, then tune the rest of your week without waiting on the university again.</p></aside>
+<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><div style="display:flex;align-items:center;gap:10px"><b id="shown"></b><button id="savePlanBtn" class="save-plan-btn" type="button" style="display:none">☆ Save plan</button></div></div><div id="calendar"></div><div id="results"></div></section>
 </div>
 </div>
 <div class="saved-view" id="savedView">
@@ -206,6 +226,12 @@ function sectionSnapshot(x){
   return {course:x.course,section:x.section,crn:x.crn,professor:x.professor,title:x.title,credits:x.credits,
     delivery:deliveryLabel(x),meetings:(x.meetings||[]).map(m=>({...m}))};
 }
+function planFingerprint(schedule){return (schedule||[]).map(x=>x.crn||`${x.course}-${x.section}`).sort().join('|')}
+function refreshSaveButton(){
+  const b=$('#savePlanBtn'),r=currentResults[selected]; if(!b||!r)return;
+  const exists=getSavedPlans().some(p=>planFingerprint(p.schedule)===planFingerprint(r.s));
+  b.textContent=exists?'✓ Saved':'☆ Save plan'; b.classList.toggle('saved',exists); b.disabled=exists;
+}
 function saveViewedPlan(){
   const r=currentResults[selected];
   if(!r)return;
@@ -217,11 +243,11 @@ function saveViewedPlan(){
     savedAt:new Date().toISOString(),courses:[...courses],schedule:r.s.map(sectionSnapshot),
     credits:totalCredits(r.s),campus:r.campus,gaps:r.gaps,
     settings:{activities:JSON.parse(JSON.stringify(activities)),windows:JSON.parse(JSON.stringify(windows)),
-      commute:+$('#commute').value,minShift:+$('#minShift').value,mode:$('#mode').value,
+      commute:+$('#commute').value,commuteEnabled:$('#commuteEnabled').checked,minShift:+$('#minShift').value,mode:$('#mode').value,
       deliveryPreference:$('#deliveryPreference').value}
   });
   setSavedPlans(plans.slice(0,20));
-  renderSavedPlans();
+  renderSavedPlans();refreshSaveButton();
   $('#loadStatus').textContent=`Saved "${name.trim()}".`;
 }
 function renderSavedPlans(){
@@ -233,30 +259,14 @@ function renderSavedPlans(){
     <h3>${esc(p.name)}</h3>
     <div class="saved-meta">${esc(p.semester)} · ${p.credits??'—'} credits · saved ${new Date(p.savedAt).toLocaleDateString()}</div>
     ${(p.schedule||[]).map(x=>`<div class="saved-course"><b>${esc(x.course)} · Sec ${esc(x.section)}</b><br>${(x.meetings||[]).map(m=>`${(m.days||[]).map(d=>DN[d]||d).join('/')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join('<br>')}<br><span style="color:#82776d">${esc(x.delivery||'')} · ${esc(x.professor||'TBA')}</span></div>`).join('')}
-    <div class="saved-actions"><button class="primary" data-load="${p.id}">Use this plan</button><button data-delete="${p.id}">Delete</button></div>
+    <div class="saved-actions"><button data-delete="${p.id}">Delete</button></div>
   </div>`).join('')}</div>`;
   box.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{
     if(!confirm('Delete this saved plan?'))return;
     setSavedPlans(getSavedPlans().filter(p=>String(p.id)!==b.dataset.delete));renderSavedPlans();
   });
-  box.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>restoreSavedPlan(b.dataset.load));
 }
-function restoreSavedPlan(id){
-  const p=getSavedPlans().find(x=>String(x.id)===String(id));if(!p)return;
-  courses=[...(p.courses||[])];
-  if(p.settings?.activities)activities=JSON.parse(JSON.stringify(p.settings.activities));
-  if(p.settings?.windows)windows=JSON.parse(JSON.stringify(p.settings.windows));
-  if(Number.isFinite(p.settings?.commute))$('#commute').value=p.settings.commute;
-  if(Number.isFinite(p.settings?.minShift))$('#minShift').value=p.settings.minShift;
-  if(p.settings?.mode)$('#mode').value=p.settings.mode;
-  if($('#deliveryPreference'))$('#deliveryPreference').value=p.settings?.deliveryPreference||'any';
-  if($('#termSelect')&&p.semester)$('#termSelect').value=p.semester;
-  $('#commuteVal').textContent=$('#commute').value+' minutes';
-  DATA=[];liveReady=false;loadedTerm='';loadedCourses=[];selected=0;
-  saveSettings();showPage('builder');setTerm(p.semester||$('#termSelect').value);
-  $('#loadStatus').textContent=`Loaded settings from "${p.name}". Click ① Load classes from UVU to refresh current section data.`;
-  render();
-}
+
 function showPage(page){
   const saved=page==='saved';
   $('#builderView').classList.toggle('hidden',saved);
@@ -346,8 +356,9 @@ function scheduleAllowed(schedule){
   if(!schedule.every(sectionAllowed))return false;
   return activities.filter(a=>a.priority==='important').every(a=>activityFit(schedule,a).fits);
 }
+function commuteMinutes(){return $('#commuteEnabled')?.checked ? +$('#commute').value : 0}
 function dailyFreeBlocks(s,d){
-  let commute=+$('#commute').value, minShift=+$('#minShift').value, w=windows[d];
+  let commute=commuteMinutes(), minShift=+$('#minShift').value, w=windows[d];
   if(!w.enabled)return[];
   let classes=s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>[m.start,m.end])).sort((a,b)=>a[0]-b[0]);
   let blocks=[],cursor=w.start;
@@ -359,11 +370,27 @@ function dailyFreeBlocks(s,d){
   if(w.end-cursor>=minShift)blocks.push([cursor,w.end]);
   return blocks;
 }
+function activityFreeBlocks(s,d){
+  const w=windows[d]; if(!w?.enabled)return[];
+  const commute=commuteMinutes();
+  const classes=s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>[m.start,m.end])).sort((a,b)=>a[0]-b[0]);
+  let blocks=[],cursor=w.start;
+  for(const [st,en] of classes){
+    const stop=Math.min(w.end,st-commute);
+    if(stop>cursor)blocks.push([cursor,stop]);
+    cursor=Math.max(cursor,en+commute,w.start);
+  }
+  if(w.end>cursor)blocks.push([cursor,w.end]);
+  return blocks;
+}
 function activityFit(s,a){
-  let candidates=a.days.flatMap(d=>dailyFreeBlocks(s,d).map(b=>({d,start:b[0],end:b[1],len:b[1]-b[0]})));
-  let need=+a.duration||60;
-  let fitting=candidates.filter(b=>b.len>=need);
-  return {fits:fitting.length>0,count:fitting.length,best:fitting.sort((x,y)=>y.len-x.len)[0]||null};
+  const need=+a.duration||60, days=a.days||[];
+  const perDay=days.map(d=>{
+    const fitting=activityFreeBlocks(s,d).map(b=>({d,start:b[0],end:b[1],len:b[1]-b[0]})).filter(b=>b.len>=need).sort((x,y)=>y.len-x.len);
+    return {d,fits:fitting.length>0,best:fitting[0]||null};
+  });
+  const fitDays=perDay.filter(x=>x.fits);
+  return {fits:days.length>0&&fitDays.length===days.length,count:fitDays.length,total:days.length,best:fitDays.sort((x,y)=>y.best.len-x.best.len)[0]?.best||null};
 }
 function metrics(s){
   let free=0,gaps=0,campus=0,early=0,longest=0,studyBlocks=0,activityScore=0,activityFits=0,workHours=0;
@@ -376,8 +403,10 @@ function metrics(s){
   }
   for(const a of activities){
     let f=activityFit(s,a), weight=a.priority==='important'?3:a.priority==='preferred'?2:1;
-    if(f.fits){activityFits++;activityScore+=weight}
-    if(a.type==='Work'&&f.best)workHours+=Math.min(f.best.len,+a.duration||60);
+    if(f.fits)activityFits++;
+    const ratio=f.total?f.count/f.total:0;
+    activityScore+=weight*ratio;
+    if(a.type==='Work')workHours+=(+a.duration||60)*f.count;
   }
   return{free:free/60,gaps:gaps/60,campus,early,longest:longest/60,studyBlocks,activityScore,activityFits,work:workHours/60};
 }
@@ -427,18 +456,34 @@ function normalizeLiveSection(x){
     meetings
   };
 }
+const SCHOOLS={
+  uvu:{
+    id:'uvu',name:'Utah Valley University',short:'UVU',
+    api:'/api/uvu',
+    sourceLabel:'UVU public Banner'
+  },
+  byu:{
+    id:'byu',name:'Brigham Young University',short:'BYU',
+    api:'/api/byu',
+    sourceLabel:'BYU class schedule',
+    comingSoon:true
+  }
+};
+function currentSchool(){return SCHOOLS[$('#schoolSelect')?.value||'uvu']||SCHOOLS.uvu}
+function schoolApi(path){return `${currentSchool().api}/${path}`}
+
 async function checkUVU(){
   const term=$('#termSelect').value;
-  $('#sourceGuard').textContent='CHECKING UVU…';
+  $('#sourceGuard').textContent=`CHECKING ${currentSchool().short}…`;
   $('#sourceGuard').style.background='#b65a18';
   try{
-    const r=await fetch(`/api/uvu/status?semester=${encodeURIComponent(term)}`,{cache:'no-store'});
-    const j=await safeJsonResponse(r,'UVU');
-    if(!r.ok||j.status!=='live')throw new Error(j.message||j.error||'UVU term is not available.');
-    $('#sourceGuard').textContent='LIVE UVU DATA';
+    const r=await fetch(`${schoolApi('status')}?semester=${encodeURIComponent(term)}`,{cache:'no-store'});
+    const j=await safeJsonResponse(r,currentSchool().short);
+    if(!r.ok||j.status!=='live')throw new Error(j.message||j.error||`${currentSchool().short} term is not available.`);
+    $('#sourceGuard').textContent=`LIVE ${currentSchool().short} DATA`;
     $('#sourceGuard').style.background='#b94e08';
     $('#dataStatus').textContent=`${term.toUpperCase()} · LIVE`;
-    $('#dataNote').textContent=`Connected to UVU Banner term ${j.bannerTermCode} · ${j.bannerLabel}. Add courses and generate schedules.`;
+    $('#dataNote').textContent=`${currentSchool().name} · term ${j.bannerTermCode}${j.bannerLabel?' · '+j.bannerLabel:''}. Add courses and load classes.`;
     liveReady=false;
     return true;
   }catch(err){
@@ -458,7 +503,7 @@ async function safeJsonResponse(r,label='UVU'){
 }
 async function validateCourseCode(c){
   try{
-    const r=await fetch(`/api/uvu/validate?course=${encodeURIComponent(c)}`);
+    const r=await fetch(`${schoolApi('validate')}?course=${encodeURIComponent(c)}`);
     return await safeJsonResponse(r,'Course validation');
   }catch(e){return {status:'unverified'}}
 }
@@ -508,7 +553,7 @@ async function refreshSeatAvailability(term){
   const crns=[...new Set(DATA.map(x=>x.crn).filter(Boolean))];
   if(!crns.length)return;
   try{
-    const r=await fetch(`/api/uvu/seats?semester=${encodeURIComponent(term)}&crns=${encodeURIComponent(crns.join(','))}`,{cache:'no-store'});
+    const r=await fetch(`${schoolApi('seats')}?semester=${encodeURIComponent(term)}&crns=${encodeURIComponent(crns.join(','))}`,{cache:'no-store'});
     const j=await safeJsonResponse(r,'UVU seats');
     if(!r.ok)return;
     const byCrn=new Map((j.seats||[]).map(x=>[String(x.crn),x]));
@@ -539,8 +584,8 @@ async function loadLiveCourses(){
     for(let i=0;i<courses.length;i++){
       const c=normalizeCourseInput(courses[i])||courses[i];
       $('#loadStatus').textContent=`Loading ${c} from UVU… (${i+1}/${courses.length})`;
-      const r=await fetch(`/api/uvu/course?semester=${encodeURIComponent(term)}&course=${encodeURIComponent(c)}`,{cache:'no-store'});
-      const j=await safeJsonResponse(r,'UVU');
+      const r=await fetch(`${schoolApi('course')}?semester=${encodeURIComponent(term)}&course=${encodeURIComponent(c)}`,{cache:'no-store'});
+      const j=await safeJsonResponse(r,currentSchool().short);
       if(!r.ok){
         failed=friendlyCourseLoadError(c,term,r.status,j);
         break;
@@ -571,7 +616,7 @@ async function loadLiveCourses(){
     DATA=all; liveReady=true; loadedTerm=term; loadedCourses=[...courses];
     $('#loadStatus').textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${DATA.length} sections loaded`;
     $('#dataStatus').textContent=`${term.toUpperCase()} · ${DATA.length} LIVE SECTIONS`;
-    $('#dataNote').textContent=`Live UVU data loaded for ${courses.join(', ')}. Use Generate / Recalculate after changing preferences.`;
+    $('#dataNote').textContent=`Live university data loaded for ${courses.join(', ')}. Use Generate / Recalculate after changing preferences.`;
     render();
     // Load seat counts independently. A slow/failed UVU seat request cannot
     // make the already-loaded schedules fail.
@@ -580,10 +625,10 @@ async function loadLiveCourses(){
     DATA=all; liveReady=false;
     const info=err?.kind==='no_regular_sections'
       ?{
-          title:`${err.course} has no regular UVU sections for ${term}`,
+          title:`${err.course} has no regular university sections for ${term}`,
           detail:err.excludedHighSchool
             ?`UVU lists ${err.excludedHighSchool} high-school/concurrent-enrollment section${err.excludedHighSchool===1?'':'s'}, which ScheduleForge excludes for regular university scheduling.`
-            :`The course is valid, but ScheduleForge did not find a regular schedulable UVU section for ${term}.`
+            :`The course is valid, but ScheduleForge did not find a regular schedulable university section for ${term}.`
         }
       :{
           title:'We couldn’t finish loading your classes',
@@ -592,7 +637,7 @@ async function loadLiveCourses(){
     $('#loadStatus').textContent=info.title+'.';
     showCourseLoadError(info);
   }finally{
-    loading=false; btn.disabled=false; btn.textContent='① Load classes from UVU';
+    loading=false; btn.disabled=false; btn.textContent='① Load classes';
   }
 }
 function renderActivities(){
@@ -753,7 +798,7 @@ function updateLoadedSummary(){
 function resultReasons(result){
   const m=(result&&result.m)||result||{};
   let r=[];
-  if(m.activityFits!=null && activities.length) r.push(`${m.activityFits}/${activities.length} priorities fit`);
+  if(m.activityFits!=null && activities.length) r.push(`${m.activityFits}/${activities.length} activities fit`);
   if(m.campus!=null) r.push(`${m.campus} campus day${m.campus===1?'':'s'}`);
   if(m.early===0) r.push('No early classes');
   if(m.gaps===0) r.push('No class gaps');
@@ -771,7 +816,7 @@ function render(){
   $('#tags').innerHTML=courses.map(c=>`<button class="tag" data-c="${esc(c)}">${esc(c)} ×</button>`).join('');
   document.querySelectorAll('.tag').forEach(b=>b.onclick=()=>{
     courses=courses.filter(c=>c!==b.dataset.c);selected=0;saveSettings();
-    if(JSON.stringify(courses)!==JSON.stringify(loadedCourses)){liveReady=false;DATA=[];$('#loadStatus').textContent='Course list changed — generate again to refresh UVU data.'}
+    if(JSON.stringify(courses)!==JSON.stringify(loadedCourses)){liveReady=false;DATA=[];$('#loadStatus').textContent='Course list changed — generate again to refresh university data.'}
     render();
   });
   renderActivities();
@@ -782,6 +827,7 @@ function render(){
   if($('#savePlanBtn'))$('#savePlanBtn').style.display=rs.length?'inline-block':'none';
   updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
+  refreshSaveButton();
   let a=rs[selected];
   $('#calendar').innerHTML=a?`${resultReasons(a).length?`<div class="result-reasons">${resultReasons(a).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Viewing Schedule #${selected+1}</b><span>${totalCredits(a.s)} credits · ${a.campus} campus day${a.campus===1?'':'s'} · ${a.gaps.toFixed(1)} class-gap hrs · ${a.activityFits}/${activities.length} priorities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${calendarDayHtml(a.s,d)}</div>`).join('')}</div></div>`:'';
   $('#results').innerHTML=!liveReady
@@ -792,6 +838,19 @@ function render(){
     :'<div class="empty">No conflict-free schedule found with the current courses and filters.</div>';
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
 }
+function syncCommuteUI(){
+  const on=$('#commuteEnabled').checked;
+  $('#commuteControls').classList.toggle('disabled',!on);
+}
+$('#commuteEnabled').onchange=()=>{syncCommuteUI();markNeedsRecalc()};
+syncCommuteUI();
+
+$('#schoolSelect').onchange=()=>{
+  liveReady=false;DATA=[];loadedTerm='';loadedCourses=[];selected=0;
+  $('#loadStatus').textContent=`University changed to ${currentSchool().name}. Load classes to continue.`;
+  checkUVU();render();
+};
+
 $('#builderTab').onclick=()=>showPage('builder');
 $('#savedTab').onclick=()=>showPage('saved');
 $('#savePlanBtn').onclick=saveViewedPlan;
@@ -818,7 +877,7 @@ $('#addCourse').onclick=()=>{
     courses.push(c);
     liveReady=false;
     DATA=[];
-    $('#loadStatus').textContent=`Added ${c}. Load classes from UVU again.`;
+    $('#loadStatus').textContent=`Added ${c}. Load classes from the university again.`;
   }else{
     $('#loadStatus').textContent=`${c} is already in your course list.`;
   }
@@ -832,7 +891,7 @@ $('#clearAllBtn').onclick=()=>{
   clearSavedSettings();
   courses=[]; activities=[]; nextActivityId=1; DATA={}; liveReady=false; selected=0;
   for(const d of D) windows[d]={enabled:true,start:420,end:1020};
-  if($('#commute')) $('#commute').value=10;
+  if($('#commute')) $('#commute').value=10;$('#commuteEnabled').checked=false;syncCommuteUI();
   if($('#commuteVal')) $('#commuteVal').textContent='10 minutes';
   if($('#minShift')) $('#minShift').value=60;
   if($('#mode')) $('#mode').value='balanced';
@@ -863,7 +922,7 @@ $('#deliveryMode').onchange=markNeedsRecalc;
 function setTerm(t){
   $('#termBig').textContent=t.toUpperCase();$('#sideTerm').textContent=t;
   DATA=[];liveReady=false;loadedTerm='';loadedCourses=[];selected=0;
-  $('#loadStatus').textContent='Semester changed — generate to pull fresh UVU sections.';
+  $('#loadStatus').textContent='Semester changed — generate to pull fresh university sections.';
   render();checkUVU();
 }
 $('#termSelect').onchange=e=>setTerm(e.target.value);
