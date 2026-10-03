@@ -59,7 +59,7 @@
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.0</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.0.1</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -360,20 +360,22 @@ function loadedSectionCount(){
 function updateLoadedSummary(){
   let el=$('#loadedSummary');
   if(!el)return;
-  if(liveReady){
+  const count=loadedSectionCount();
+  if(liveReady && count>0){
     el.style.display='block';
-    el.textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${loadedSectionCount()} sections loaded`;
+    el.textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${count} sections loaded`;
   }else{
     el.style.display='none';
   }
 }
-function resultReasons(m){
+function resultReasons(result){
+  const m=(result&&result.m)||result||{};
   let r=[];
   if(m.activityScore!=null) r.push(`${m.activityScore} activit${m.activityScore===1?'y':'ies'} fit`);
   if(m.campusDays!=null) r.push(`${m.campusDays} campus day${m.campusDays===1?'':'s'}`);
   if(m.early===0) r.push('No early classes');
   if(m.gaps===0) r.push('No class gaps');
-  if(m.longestFree>=120) r.push(`${(m.longestFree/60).toFixed(1)}h longest free block`);
+  if((m.longestFree||0)>=120) r.push(`${(m.longestFree/60).toFixed(1)}h longest free block`);
   return r.slice(0,4);
 }
 function markNeedsRecalc(){
@@ -397,7 +399,7 @@ function render(){
   updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
   let a=rs[selected];
-  $('#calendar').innerHTML=a?`${resultReasons(a.m).length?`<div class="result-reasons">${resultReasons(a.m).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.free.toFixed(1)} free hrs · ${a.campus} campus days · ${a.activityFits}/${activities.length} activities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${[
+  $('#calendar').innerHTML=a?`${resultReasons(a).length?`<div class="result-reasons">${resultReasons(a).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Schedule #${selected+1}</b><span>${a.free.toFixed(1)} free hrs · ${a.campus} campus days · ${a.activityFits}/${activities.length} activities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${[
   ...a.s.flatMap(x=>x.meetings.filter(m=>m.days.includes(d)).map(m=>({kind:'class',start:m.start,end:m.end,x,m}))),
   ...placedActivitiesForDay(a.s,d).map(p=>({kind:'activity',start:p.start,end:p.end,p}))
 ].sort((u,v)=>u.start-v.start||u.end-v.end).map(item=>item.kind==='class'
@@ -442,7 +444,7 @@ $('#addCourse').onclick=()=>{
 $('#courseInput').onkeydown=e=>{if(e.key==='Enter')$('#addCourse').click()};
 $('#generateBtn').onclick=loadLiveCourses;
 $('#recalculateBtn').onclick=()=>{
-  if(!liveReady){
+  if(!liveReady || loadedSectionCount()===0){
     $('#loadStatus').textContent='Load your classes from UVU first.';
     return;
   }
