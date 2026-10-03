@@ -81,10 +81,19 @@
   justify-content:center;
   gap:5px;
 }
+
+.format-help{
+  margin-top:6px;
+  color:#82776d;
+  font-size:11px;
+  line-height:1.35;
+  text-align:left;
+  font-weight:400;
+}
 </style>
 </head>
 <body>
-<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.3</small></div>
+<header><div class="brand">▣ ScheduleForge<small>student life & schedule optimizer · v4.18.4</small></div>
     <div style="display:flex;gap:10px;align-items:center">
       <div style="font-size:11px;color:#6f7c75;font-weight:700">CURRENT SEMESTER</div>
       <div class="pill" id="dataStatus">SPRING 2027</div>
@@ -127,7 +136,7 @@
 <option value="inperson">Prefer in-person classes</option>
 <option value="online">Prefer online classes</option>
 </select>
-<div class="rangeval">This affects ranking only — it does not exclude the other format.</div>
+<div class="format-help">Preference only — other class formats can still appear.</div>
 <label>Optimize for</label><select id="mode">
 <option value="balanced">Balanced schedule</option>
 <option value="free">Most usable free time</option>
