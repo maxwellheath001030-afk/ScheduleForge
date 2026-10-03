@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 import re, requests
 from bs4 import BeautifulSoup
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote_plus
 
 app=Flask(__name__,static_folder=".")
 BASE="https://userve.uvu.edu/ssb/"
@@ -274,6 +274,42 @@ def course():
         return jsonify(source="UVU public Banner",semester=semester,associatedTerm=actual,course=q,sections=rows)
     except Exception as e:
         return jsonify(error=str(e),semester=semester,sourceUrl=url),502
+
+
+@app.get("/api/uvu/course-search")
+def course_search():
+    q=(request.args.get("q") or "").strip().upper()
+    if len(q)<2:
+        return jsonify(query=q,results=[])
+    try:
+        # UVU catalog course-search supports a keyword query; parse returned course links/text.
+        url="https://catalog.uvu.edu/course-search/?keyword="+quote_plus(q)
+        r=requests.get(url,timeout=15,headers={"User-Agent":UA})
+        r.raise_for_status()
+        soup=BeautifulSoup(r.text,"html.parser")
+        found=[]
+        seen=set()
+        # Capture codes such as ME 3335, PHIL 2050G, etc. plus nearby text as title.
+        for el in soup.find_all(["a","h2","h3","h4","p","div","span"]):
+            txt=" ".join(el.get_text(" ",strip=True).split())
+            m=re.search(r"\b([A-Z]{2,6})\s+([0-9]{3,4}[A-Z]?)\b",txt.upper())
+            if not m: continue
+            code=f"{m.group(1)} {m.group(2)}"
+            if code in seen: continue
+            # Keep results related to typed subject/number text.
+            compact=q.replace(" ","").replace("-","").replace("_","")
+            if compact and compact not in code.replace(" ","") and not code.replace(" ","").startswith(compact):
+                # For text queries, allow page search relevance to decide.
+                if re.fullmatch(r"[A-Z]{2,6}[0-9A-Z]*",compact): continue
+            title=txt
+            title=re.sub(rf"^\s*{re.escape(code)}\s*[-–—:]?\s*","",title,flags=re.I)
+            if len(title)>100: title=title[:97]+"..."
+            found.append({"course":code,"title":title})
+            seen.add(code)
+            if len(found)>=12: break
+        return jsonify(query=q,results=found)
+    except Exception as e:
+        return jsonify(query=q,results=[],error="Course search is temporarily unavailable."),502
 
 @app.get("/api/uvu/validate")
 def validate_course():
