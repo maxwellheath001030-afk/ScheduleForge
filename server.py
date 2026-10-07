@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify, send_from_directory
-import re, requests, time, json, secrets
+import re, requests, time, json, sqlite3, threading, hashlib
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
@@ -78,6 +78,9 @@ def parse_meetings(text):
 
 SEAT_CACHE={}
 SEAT_CACHE_TTL=300
+COURSE_CACHE={}
+COURSE_CACHE_TTL=600
+CACHE_LOCK=threading.Lock()
 
 def seat_detail(term,crn):
     key=(term,str(crn))
@@ -330,11 +333,11 @@ APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.get("/")
 def index():
-    return send_from_directory(APP_DIR, "ScheduleForge.html")
+    return send_from_directory(APP_DIR, "ScheduleForge.html", max_age=0)
 
 @app.get("/ScheduleForge.html")
 def scheduleforge_page():
-    return send_from_directory(APP_DIR, "ScheduleForge.html")
+    return send_from_directory(APP_DIR, "ScheduleForge.html", max_age=0)
 
 @app.get("/live-test.html")
 def live_test_page():
@@ -354,6 +357,13 @@ def course():
         term=resolved["code"]
     parts=q.split()
     if len(parts)!=2:return jsonify(error='Use a course like "ME 3335".'),400
+    cache_key=(semester,term,q)
+    with CACHE_LOCK:
+        cached=COURSE_CACHE.get(cache_key)
+        if cached and time.time()-cached["at"] < COURSE_CACHE_TTL:
+            payload=dict(cached["payload"])
+            payload["cache"]="hit"
+            return jsonify(payload),200
     subject,num=parts
     url=BASE+LIST+"?"+urlencode({"crse_in":num,"schd_in":"%","subj_in":subject,"term_in":term})
     try:
@@ -391,7 +401,14 @@ def course():
             row.setdefault("waitlistCapacity",None)
             row.setdefault("waitlistEnrolled",None)
             row.setdefault("waitlistAvailable",None)
-        return jsonify(source="UVU public Banner",semester=semester,associatedTerm=actual,course=q,sections=rows,parsedSections=parsed_count,excludedHighSchool=hs_count)
+        payload=dict(source="UVU public Banner",semester=semester,associatedTerm=actual,course=q,sections=rows,parsedSections=parsed_count,excludedHighSchool=hs_count,cache="miss")
+        with CACHE_LOCK:
+            COURSE_CACHE[cache_key]={"at":time.time(),"payload":payload}
+            if len(COURSE_CACHE)>500:
+                cutoff=time.time()-COURSE_CACHE_TTL
+                for k in list(COURSE_CACHE):
+                    if COURSE_CACHE[k]["at"]<cutoff: COURSE_CACHE.pop(k,None)
+        return jsonify(payload)
     except Exception as e:
         return jsonify(error=str(e),semester=semester,sourceUrl=url),502
 
@@ -470,55 +487,76 @@ def validate_course():
         return jsonify({"ok": False, "status": "unverified", "course": course, "error": str(e)}), 502
 
 
-# Beta feedback: intentionally stores no name, email, student ID, schedule, or request IP.
-# For durable storage on Render, set FEEDBACK_FILE to a mounted persistent-disk path.
-FEEDBACK_FILE=os.environ.get("FEEDBACK_FILE", "/tmp/scheduleforge-feedback.jsonl")
 
-def _feedback_text(value, limit=1500):
-    return str(value or "").strip()[:limit]
 
-@app.post("/api/feedback")
-def submit_feedback():
+# Privacy-minimal beta analytics. The app generates a random browser ID; no name,
+# email, student ID, course list, schedule contents, or request IP are stored.
+ANALYTICS_DB=os.environ.get("ANALYTICS_DB","/tmp/scheduleforge-analytics.sqlite3")
+ANALYTICS_EVENTS={"site_opened","classes_loaded","schedule_generated","plan_saved"}
+ANALYTICS_LOCK=threading.Lock()
+
+def analytics_conn():
+    os.makedirs(os.path.dirname(ANALYTICS_DB) or ".",exist_ok=True)
+    conn=sqlite3.connect(ANALYTICS_DB,timeout=5)
+    conn.execute("""CREATE TABLE IF NOT EXISTS events(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        visitor_hash TEXT NOT NULL,
+        event TEXT NOT NULL,
+        source TEXT NOT NULL,
+        app_version TEXT NOT NULL,
+        course_count INTEGER,
+        section_count INTEGER,
+        valid_schedules INTEGER
+    )""")
+    return conn
+
+@app.post("/api/events")
+def record_event():
     data=request.get_json(silent=True) or {}
-    allowed_experience={"great","okay","poor"}
-    allowed_return={"yes","maybe","no"}
-    experience=_feedback_text(data.get("experience"),20)
-    use_next=_feedback_text(data.get("useNextSemester"),20)
-    if experience not in allowed_experience or use_next not in allowed_return:
-        return jsonify(ok=False,error="Invalid feedback selection."),400
-    entry={
-        "id": secrets.token_hex(8),
-        "submittedAt": datetime.now(timezone.utc).isoformat(),
-        "experience": experience,
-        "worked": _feedback_text(data.get("worked")),
-        "confusing": _feedback_text(data.get("confusing")),
-        "wanted": _feedback_text(data.get("wanted")),
-        "useNextSemester": use_next,
-        "school": _feedback_text(data.get("school"),30),
-        "semester": _feedback_text(data.get("semester"),40),
-        "appVersion": _feedback_text(data.get("appVersion"),40)
-    }
+    event=str(data.get("event") or "")[:40]
+    if event not in ANALYTICS_EVENTS: return ("",204)
+    visitor=str(data.get("visitorId") or "")[:120]
+    if not visitor: return ("",204)
+    # Hash the random browser identifier before storage.
+    visitor_hash=hashlib.sha256(visitor.encode("utf-8")).hexdigest()[:24]
+    source=re.sub(r"[^a-zA-Z0-9_-]","",str(data.get("source") or "direct"))[:40] or "direct"
+    version=str(data.get("appVersion") or "")[:40]
+    def safe_int(v):
+        try: return max(0,min(int(v),1000000))
+        except Exception: return None
     try:
-        os.makedirs(os.path.dirname(FEEDBACK_FILE) or ".",exist_ok=True)
-        with open(FEEDBACK_FILE,"a",encoding="utf-8") as f:
-            f.write(json.dumps(entry,ensure_ascii=False)+"\n")
-        return jsonify(ok=True),201
+        with ANALYTICS_LOCK:
+            conn=analytics_conn()
+            with conn:
+                conn.execute("""INSERT INTO events(created_at,visitor_hash,event,source,app_version,course_count,section_count,valid_schedules)
+                    VALUES(?,?,?,?,?,?,?,?)""",
+                    (datetime.now(timezone.utc).isoformat(),visitor_hash,event,source,version,
+                     safe_int(data.get("courseCount")),safe_int(data.get("sectionCount")),safe_int(data.get("validSchedules"))))
+            conn.close()
     except Exception:
-        return jsonify(ok=False,error="Feedback storage is temporarily unavailable."),503
+        pass
+    return ("",204)
 
-@app.get("/api/admin/feedback")
-def review_feedback():
-    token=os.environ.get("FEEDBACK_ADMIN_TOKEN","")
-    supplied=request.headers.get("X-Feedback-Admin-Token","")
-    if not token or not secrets.compare_digest(token,supplied):
+@app.get("/api/admin/analytics")
+def analytics_summary():
+    token=os.environ.get("ANALYTICS_ADMIN_TOKEN","")
+    supplied=request.headers.get("X-Analytics-Admin-Token","")
+    if not token or not supplied or not hashlib.sha256(token.encode()).digest()==hashlib.sha256(supplied.encode()).digest():
         return jsonify(error="Unauthorized"),401
     try:
-        if not os.path.exists(FEEDBACK_FILE): return jsonify(feedback=[])
-        with open(FEEDBACK_FILE,"r",encoding="utf-8") as f:
-            rows=[json.loads(line) for line in f if line.strip()]
-        return jsonify(feedback=list(reversed(rows[-500:])))
+        conn=analytics_conn()
+        totals={row[0]:row[1] for row in conn.execute("SELECT event,COUNT(*) FROM events GROUP BY event")}
+        unique=conn.execute("SELECT COUNT(DISTINCT visitor_hash) FROM events WHERE event='site_opened'").fetchone()[0]
+        sources=[{"source":r[0],"visitors":r[1]} for r in conn.execute(
+            "SELECT source,COUNT(DISTINCT visitor_hash) FROM events WHERE event='site_opened' GROUP BY source ORDER BY 2 DESC")]
+        funnel={}
+        for event in ANALYTICS_EVENTS:
+            funnel[event]=conn.execute("SELECT COUNT(DISTINCT visitor_hash) FROM events WHERE event=?",(event,)).fetchone()[0]
+        conn.close()
+        return jsonify(uniqueVisitors=unique,eventTotals=totals,funnel=funnel,sources=sources)
     except Exception:
-        return jsonify(error="Could not read feedback."),500
+        return jsonify(error="Analytics unavailable"),503
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), debug=False)

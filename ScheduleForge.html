@@ -6,7 +6,6 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f8f6f2;color:#26231f;font-family:Arial,sans-serif}header{height:70px;background:#fff;border-bottom:1px solid #e6ded4;display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;color:#82776d;font-weight:500}.pill{background:#fff0df;color:#9a4d12;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:700}
 .beta-badge{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:12px;background:#fff0df;color:#b64c05;font-size:9px;font-weight:900;letter-spacing:.08em;vertical-align:2px}
-.feedback-btn{position:fixed;right:18px;bottom:18px;z-index:50;border:1px solid #e7b88e;background:#fff;color:#b64c05;border-radius:999px;padding:10px 15px;font-weight:800;box-shadow:0 4px 16px #0001;cursor:pointer}
 .privacy-note{font-size:10px;line-height:1.5;color:#82776d;margin-top:10px}
 main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:end;margin-bottom:28px}.hero h1{font-size:44px;line-height:1.05;margin:8px 0}.hero h1 span{color:#e66a12}.hero p{color:#766d65;line-height:1.55}.eyebrow{font-size:11px;font-weight:800;color:#e66a12;letter-spacing:.08em}.metric{background:#352a22;color:white;border-radius:17px;padding:22px}.metric small{font-size:10px;color:#e6cdb9}.metric strong{display:block;font-size:36px;margin:7px 0}.metric span{font-size:11px;color:#e6cdb9}.layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start}.panel{background:white;border:1px solid #e6ded4;border-radius:16px;padding:22px}aside{position:static}h2{margin:0 0 17px;font-size:21px}label{display:block;font-size:12px;font-weight:700;color:#685f57;margin:17px 0 7px}.add{display:flex;gap:7px}.add input,select{width:100%;padding:10px;border:1px solid #ddd2c7;border-radius:8px;background:white}.add button{width:42px;border:0;border-radius:8px;background:#d85f0b;color:white;font-size:20px}.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{border:0;border-radius:7px;background:#fff3e8;color:#8a4615;padding:7px 8px;font-size:11px;font-weight:700;cursor:pointer}.availability{display:flex;flex-direction:column;gap:6px}.daywin{display:grid;grid-template-columns:40px 1fr 10px 1fr;gap:5px;align-items:center}.daywin button{border:0;border-radius:7px;padding:8px 3px;font-size:10px;font-weight:800;background:#ffead8;color:#d85f0b}.daywin button.off{background:#eee;color:#999;text-decoration:line-through}.daywin input{min-width:0;width:100%;padding:6px 2px;border:1px solid #ddd2c7;border-radius:6px;font-size:10px}.range{width:100%;accent-color:#d85f0b}.rangeval{text-align:right;color:#d85f0b;font-size:11px;font-weight:700}.note{font-size:11px;line-height:1.55;color:#91877e;margin-top:18px}.resultHead{display:flex;justify-content:space-between;border-bottom:1px solid #e9eeeb;padding-bottom:14px}.resultHead small{font-size:10px;color:#82776e;letter-spacing:.1em}.calendar{border:1px solid #e8ded4;border-radius:13px;margin:16px 0;overflow:hidden}.calTitle{background:#352a22;color:#fff;padding:11px 13px;display:flex;justify-content:space-between;font-size:12px}.week{display:grid;grid-template-columns:repeat(5,1fr);min-height:150px}.daycol{padding:9px 6px;border-right:1px solid #eee5dc}.daycol:last-child{border:0}.daycol>b{font-size:10px;color:#68776f}.event{margin-top:7px;background:#fff0e3;border-left:3px solid #ef7a22;border-radius:5px;padding:6px}.event.activity{background:#f1f3f5;border-left-color:#8b949e;color:#4b5560}.event.activity strong{color:#374151}
 .day-empty{margin-top:12px;padding:18px 6px;text-align:center;color:#a3988e;font-size:10px;background:#fcfaf7;border-radius:7px}
@@ -123,12 +122,9 @@ main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid
 .saved-actions .primary{background:#fff0df;border-color:#efc59f}
 .saved-empty{padding:42px 20px;text-align:center;color:#82776d;border:1px dashed #ddcfc2;border-radius:14px;background:#fff}
 
-.feedback-overlay{position:fixed;inset:0;background:#2f241db8;z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
-.feedback-overlay.open{display:flex}.feedback-modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:24px;box-shadow:0 20px 60px #0005}
-.feedback-modal h2{margin:0 0 5px}.feedback-modal p{margin:0 0 15px;color:#766d65;font-size:12px;line-height:1.5}.feedback-modal label{margin-top:12px}
-.feedback-modal textarea,.feedback-modal select{width:100%;box-sizing:border-box;border:1px solid #ddd2c7;border-radius:8px;padding:10px;background:#fff;font:inherit}.feedback-modal textarea{min-height:82px;resize:vertical}
-.feedback-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.feedback-actions button{border:1px solid #ddcfc2;border-radius:9px;padding:10px 14px;background:#fff;color:#76533a;font-weight:800;cursor:pointer}.feedback-actions .submit-feedback{background:#d85f0b;border-color:#d85f0b;color:#fff}
-.feedback-status{min-height:18px;margin-top:10px!important;font-weight:700}.feedback-success{text-align:center;padding:24px 4px}.feedback-success strong{display:block;font-size:20px;margin-bottom:7px;color:#352a22}
+
+.show-more-wrap{text-align:center;margin-top:16px}.show-more{border:1px solid #e3c4aa;background:#fff;color:#a84a0b;border-radius:9px;padding:11px 18px;font-weight:800;cursor:pointer}.show-more:hover{background:#fff5ed}
+.launch-note{font-size:10px;color:#82776d;line-height:1.45;margin-top:8px}
 </style>
 </head>
 <body>
@@ -201,7 +197,7 @@ main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid
 </select>
 
 <p class="note" id="dataNote">Your courses and preferences are saved automatically in this browser. Load sections once, then tune the rest of your week without waiting on the university again.</p></aside>
-<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2>Top matches</h2></div><div style="display:flex;align-items:center;gap:10px"><b id="shown"></b><button id="savePlanBtn" class="save-plan-btn" type="button" style="display:none">☆ Save plan</button></div></div><div id="calendar"></div><div id="results"></div></section>
+<section class="panel"><div class="resultHead"><div><small>GENERATED SCHEDULES</small><h2 id="resultsTitle">Top matches</h2></div><div style="display:flex;align-items:center;gap:10px"><b id="shown"></b><button id="savePlanBtn" class="save-plan-btn" type="button" style="display:none">☆ Save plan</button></div></div><div id="calendar"></div><div id="results"></div></section>
 </div>
 </div>
 <div class="saved-view" id="savedView">
@@ -212,26 +208,6 @@ main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid
   </section>
 </div>
 </main>
-<button class="feedback-btn" id="feedbackBtn" type="button">Send feedback</button>
-<div class="feedback-overlay" id="feedbackOverlay" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
-  <div class="feedback-modal">
-    <div id="feedbackFormView">
-      <h2 id="feedbackTitle">Help improve ScheduleForge</h2>
-      <p>This beta form stays inside ScheduleForge. Please don't include passwords, student IDs, or other sensitive information.</p>
-      <label for="feedbackExperience">Overall experience</label>
-      <select id="feedbackExperience"><option value="great">👍 Great</option><option value="okay">😐 Okay</option><option value="poor">👎 Needs work</option></select>
-      <label for="feedbackWorked">What worked well?</label><textarea id="feedbackWorked" maxlength="1500"></textarea>
-      <label for="feedbackConfusing">What was confusing or broken?</label><textarea id="feedbackConfusing" maxlength="1500"></textarea>
-      <label for="feedbackWanted">What would you change or add?</label><textarea id="feedbackWanted" maxlength="1500"></textarea>
-      <label for="feedbackReturn">Would you use ScheduleForge next semester?</label>
-      <select id="feedbackReturn"><option value="yes">Yes</option><option value="maybe">Maybe</option><option value="no">No</option></select>
-      <p class="feedback-status" id="feedbackStatus"></p>
-      <div class="feedback-actions"><button id="feedbackCancel" type="button">Cancel</button><button class="submit-feedback" id="feedbackSubmit" type="button">Submit feedback</button></div>
-    </div>
-    <div class="feedback-success" id="feedbackSuccess" style="display:none"><strong>Thanks — feedback submitted.</strong><p>Your feedback will help improve the beta.</p><div class="feedback-actions"><button id="feedbackDone" type="button">Done</button></div></div>
-  </div>
-</div>
-
 <script>
 let DATA=[];
 const D=['M','T','W','R','F'], DN={M:'Mon',T:'Tue',W:'Wed',R:'Thu',F:'Fri'}, FULL={M:'Monday',T:'Tuesday',W:'Wednesday',R:'Thursday',F:'Friday'};
@@ -247,6 +223,24 @@ let liveReady=false, loading=false, loadedTerm='', loadedCourses=[];
 
 const PLANS_KEY='scheduleforge-saved-plans-v1';
 let currentResults=[];
+let resultDisplayLimit=10;
+const VISITOR_KEY='scheduleforge-anon-visitor-v1';
+function anonVisitorId(){
+  try{
+    let id=localStorage.getItem(VISITOR_KEY);
+    if(!id){id=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));localStorage.setItem(VISITOR_KEY,id)}
+    return id;
+  }catch(e){return 'session-'+Math.random().toString(36).slice(2)}
+}
+function trackEvent(event,meta={}){
+  const payload={event,visitorId:anonVisitorId(),source:new URLSearchParams(location.search).get('src')||'direct',appVersion:'UVU Launch Beta',...meta};
+  try{
+    const body=JSON.stringify(payload);
+    if(navigator.sendBeacon){navigator.sendBeacon('/api/events',new Blob([body],{type:'application/json'}));}
+    else fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
+  }catch(e){}
+}
+
 function getSavedPlans(){try{return JSON.parse(localStorage.getItem(PLANS_KEY)||'[]')||[]}catch(e){return[]}}
 function setSavedPlans(plans){try{localStorage.setItem(PLANS_KEY,JSON.stringify(plans))}catch(e){} updateSavedCount()}
 function updateSavedCount(){
@@ -278,6 +272,7 @@ function saveViewedPlan(){
       deliveryPreference:$('#deliveryPreference').value}
   });
   setSavedPlans(plans.slice(0,20));
+  trackEvent('plan_saved');
   renderSavedPlans();refreshSaveButton();
   $('#loadStatus').textContent=`Saved "${name.trim()}".`;
 }
@@ -459,7 +454,7 @@ function getResults(){
     const formatMatches=deliveryPreferenceScore(s);
     score+=formatMatches*20;
     return{s,...m,formatMatches,score};
-  }).sort((a,b)=>b.score-a.score).slice(0,10);
+  }).sort((a,b)=>b.score-a.score);
 }
 function normalizeLiveSection(x){
   let meetings=(x.meetings||[]).map(m=>({
@@ -644,7 +639,8 @@ async function loadLiveCourses(){
       return;
     }
 
-    DATA=all; liveReady=true; loadedTerm=term; loadedCourses=[...courses];
+    DATA=all; liveReady=true;
+    trackEvent('classes_loaded',{courseCount:courses.length,sectionCount:DATA.length}); loadedTerm=term; loadedCourses=[...courses];
     $('#loadStatus').textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${DATA.length} sections loaded`;
     $('#dataStatus').textContent=`${term.toUpperCase()} · ${DATA.length} LIVE SECTIONS`;
     $('#dataNote').textContent=`Live university data loaded for ${courses.join(', ')}. Use Generate / Recalculate after changing preferences.`;
@@ -854,7 +850,9 @@ function render(){
   renderAvailability();
   let rs=getResults();
   currentResults=rs;
-  $('#shown').textContent=liveReady?rs.length+' shown':'';
+  const visibleResults=rs.slice(0,resultDisplayLimit);
+  $('#shown').textContent=liveReady&&rs.length?`Top ${Math.min(resultDisplayLimit,rs.length)} of ${rs.length} valid schedules`:'';
+  $('#resultsTitle').textContent=liveReady&&rs.length?`Top matches`:'Top matches';
   if($('#savePlanBtn'))$('#savePlanBtn').style.display=rs.length?'inline-block':'none';
   updateBestMetric(rs[0]);
   if(selected>=rs.length)selected=0;
@@ -863,10 +861,14 @@ function render(){
   $('#calendar').innerHTML=a?`${resultReasons(a).length?`<div class="result-reasons">${resultReasons(a).map(x=>`<span class="reason">${esc(x)}</span>`).join('')}</div>`:''}<div class="calendar"><div class="calTitle"><b>Viewing Schedule #${selected+1}</b><span>${totalCredits(a.s)} credits · ${a.campus} campus day${a.campus===1?'':'s'} · ${a.gaps.toFixed(1)} class-gap hrs · ${a.activityFits}/${activities.length} priorities fit</span></div><div class="week">${D.map(d=>`<div class="daycol"><b>${FULL[d]}</b>${calendarDayHtml(a.s,d)}</div>`).join('')}</div></div>`:'';
   $('#results').innerHTML=!liveReady
     ?'<div class="empty">Choose your courses, then click <b>Load classes from UVU</b> once.</div>'
-    :rs.length?rs.map((r,i)=>`<div class="result ${i===selected?'selected':''}" data-i="${i}"><div class="rank"><span>#${i+1}${i===0?' <span class="best-star" title="Best match">★</span>':''}</span>${i===selected?'<span class="viewing">VIEWING</span>':''}</div><div class="stats"><div><strong>${r.free.toFixed(1)}</strong><span>usable free hrs</span></div><div><strong>${r.activityFits}/${activities.length}</strong><span>activities fit</span></div><div><strong>${r.campus}</strong><span>campus days</span></div><div><strong>${totalCredits(r.s)}</strong><span>credits</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}${x.credits!=null?`<small style="display:block;font-weight:600;color:#8a7465;margin-top:2px">${esc(x.credits)} credits</small>`:''}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges">${professorHtml(x.professor)}${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null
+    :rs.length?visibleResults.map((r,i)=>`<div class="result ${i===selected?'selected':''}" data-i="${i}"><div class="rank"><span>#${i+1}${i===0?' <span class="best-star" title="Best match">★</span>':''}</span>${i===selected?'<span class="viewing">VIEWING</span>':''}</div><div class="stats"><div><strong>${r.free.toFixed(1)}</strong><span>usable free hrs</span></div><div><strong>${r.activityFits}/${activities.length}</strong><span>activities fit</span></div><div><strong>${r.campus}</strong><span>campus days</span></div><div><strong>${totalCredits(r.s)}</strong><span>credits</span></div></div><div class="classes">${r.s.map(x=>`<div class="classrow"><b>${esc(x.course)}${x.credits!=null?`<small style="display:block;font-weight:600;color:#8a7465;margin-top:2px">${esc(x.credits)} credits</small>`:''}</b><span>Sec ${esc(x.section)}<br><small>CRN ${esc(x.crn||'—')}</small></span><span>${x.meetings.map(m=>`${m.days.map(d=>DN[d][0]).join('')} ${fmt(m.start)}–${fmt(m.end)}${m.location?' · '+esc(m.location):''}`).join(', ')}<div class="badges">${professorHtml(x.professor)}${x.delivery?`<span class="badge">${esc(x.delivery)}</span>`:''}${x.seatsAvailable===null
   ?`<span class="badge" title="UVU did not provide a seat count for this section">Seats unknown</span>`
   :`<span class="badge ${x.seatsAvailable>0?'open':'closed'}">${x.seatsAvailable>0?x.seatsAvailable+' seat'+(x.seatsAvailable===1?'':'s')+' open':'Full'}</span>`}</div></span></div>`).join('')}</div></div>`).join('')
     :'<div class="empty">No conflict-free schedule found with the current courses and filters.</div>';
+  if(liveReady && rs.length>visibleResults.length){
+    $('#results').insertAdjacentHTML('beforeend',`<div class="show-more-wrap"><button class="show-more" id="showMoreSchedules" type="button">Show 10 more schedules</button></div>`);
+    $('#showMoreSchedules').onclick=()=>{resultDisplayLimit+=10;render()};
+  }
   document.querySelectorAll('.result').forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
 }
 function syncCommuteUI(){
@@ -882,25 +884,6 @@ $('#schoolSelect').onchange=()=>{
   checkUVU();render();
 };
 
-
-const closeFeedback=()=>{$('#feedbackOverlay').classList.remove('open')};
-$('#feedbackBtn').onclick=()=>{
-  $('#feedbackFormView').style.display='block'; $('#feedbackSuccess').style.display='none';
-  $('#feedbackStatus').textContent=''; $('#feedbackOverlay').classList.add('open');
-};
-$('#feedbackCancel').onclick=closeFeedback; $('#feedbackDone').onclick=closeFeedback;
-$('#feedbackOverlay').onclick=e=>{if(e.target===$('#feedbackOverlay'))closeFeedback()};
-$('#feedbackSubmit').onclick=async()=>{
-  const btn=$('#feedbackSubmit'); btn.disabled=true; $('#feedbackStatus').textContent='Submitting…';
-  const payload={experience:$('#feedbackExperience').value,worked:$('#feedbackWorked').value.trim(),confusing:$('#feedbackConfusing').value.trim(),wanted:$('#feedbackWanted').value.trim(),useNextSemester:$('#feedbackReturn').value,school:currentSchool().id,semester:$('#termSelect').value,appVersion:'UVU Beta v1.1'};
-  try{
-    const r=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(!r.ok)throw new Error('submit failed');
-    $('#feedbackWorked').value='';$('#feedbackConfusing').value='';$('#feedbackWanted').value='';
-    $('#feedbackFormView').style.display='none';$('#feedbackSuccess').style.display='block';
-  }catch(e){$('#feedbackStatus').textContent='Could not submit right now. Please try again.'}
-  finally{btn.disabled=false}
-};
 
 $('#builderTab').onclick=()=>showPage('builder');
 $('#savedTab').onclick=()=>showPage('saved');
@@ -960,6 +943,8 @@ $('#recalculateBtn').onclick=()=>{
   }
   selected=0;
   render();
+  resultDisplayLimit=10;
+  trackEvent('schedule_generated',{validSchedules:getResults().length,courseCount:courses.length});
   $('#loadStatus').textContent='Schedules updated instantly using the classes already loaded — no UVU reload needed.';
   $('#recalculateBtn').style.background='white';
 };
@@ -980,6 +965,7 @@ $('#termSelect').onchange=e=>setTerm(e.target.value);
 $('#termBig').textContent=$('#termSelect').value.toUpperCase();
 $('#sideTerm').textContent=$('#termSelect').value;
 restoreSettings();
+trackEvent('site_opened');
 render();
 checkUVU();
 </script>
