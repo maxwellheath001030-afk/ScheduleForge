@@ -125,6 +125,9 @@ main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid
 
 .show-more-wrap{text-align:center;margin-top:16px}.show-more{border:1px solid #e3c4aa;background:#fff;color:#a84a0b;border-radius:9px;padding:11px 18px;font-weight:800;cursor:pointer}.show-more:hover{background:#fff5ed}
 .launch-note{font-size:10px;color:#82776d;line-height:1.45;margin-top:8px}
+
+.section-audit{margin-top:8px;padding:10px 12px;border:1px solid #ead9cb;border-radius:9px;background:#fffaf6;font-size:11px;line-height:1.55;color:#5d5148}
+.section-audit b{color:#2f241e}.section-audit .warn{color:#a84a0b;font-weight:800}
 </style>
 </head>
 <body>
@@ -167,7 +170,7 @@ main{max-width:1200px;margin:auto;padding:38px 24px 70px}.hero{display:grid;grid
 <label>Semester</label><h2 id="sideTerm" style="margin-top:4px">Spring 2027</h2>
 <label>Courses</label><div class="add"><input id="courseInput" placeholder="e.g. ME 3335 or me3335"><button id="addCourse">+</button></div><div class="tags" id="tags"></div><button id="generateBtn" style="width:100%;margin-top:12px;padding:12px;border:0;border-radius:9px;background:#d85f0b;color:white;font-weight:800;cursor:pointer">① Load classes</button><button id="recalculateBtn" style="width:100%;margin-top:7px;padding:10px;border:1px solid #ddcfc2;border-radius:9px;background:white;color:#a84a0b;font-weight:800;cursor:pointer">② Generate schedules</button><button id="clearAllBtn" type="button" style="width:100%;margin-top:7px;padding:8px;border:1px solid #ddcfc2;border-radius:9px;background:#fff;color:#8a4a20;font-weight:750;cursor:pointer">Clear selections / Start over</button>
 <div id="loadedSummary" class="loaded-summary"></div>
-<div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div>
+<div id="loadStatus" style="font-size:10px;color:#68776f;line-height:1.45;margin-top:8px"></div><div id="sectionAudit" class="section-audit" style="display:none"></div>
 <label>Activities & priorities</label>
 <div class="activityHint">Add the things you want ScheduleForge to leave room for. <b>Must fit</b> acts as a hard requirement; <b>Prefer</b> improves ranking; <b>Flexible</b> is a light preference.</div>
 <div class="add"><select id="activityType"><option>Study</option><option>Work</option><option>Gym</option><option>Lunch</option><option>Club</option><option>Personal</option><option>Custom</option></select><button id="addActivity" title="Add activity"><span>+</span><span>Add</span></button></div>
@@ -598,10 +601,42 @@ async function refreshSeatAvailability(term){
   }
 }
 
+
+function sectionKey(x){
+  const crn=String(x.crn||'').trim();
+  if(crn)return `crn:${crn}`;
+  const mt=(x.meetings||[]).map(m=>`${(m.days||[]).join('')}:${m.start}-${m.end}:${m.location||''}`).sort().join('|');
+  return `${x.course}|${x.section}|${x.professor||''}|${mt}`;
+}
+function auditLoadedSections(rows){
+  const byCourse={};
+  for(const c of courses){
+    const list=rows.filter(x=>x.course===c);
+    const keys=list.map(sectionKey);
+    const crns=list.map(x=>String(x.crn||'').trim()).filter(Boolean);
+    byCourse[c]={total:list.length,unique:new Set(keys).size,duplicateRows:list.length-new Set(keys).size,
+      uniqueCrns:new Set(crns).size,missingCrn:list.length-crns.length};
+  }
+  return byCourse;
+}
+function renderSectionAudit(rows){
+  const el=$('#sectionAudit'); if(!el)return;
+  const audit=auditLoadedSections(rows);
+  const lines=courses.map(c=>{
+    const a=audit[c]||{total:0,unique:0,duplicateRows:0,uniqueCrns:0,missingCrn:0};
+    const warning=a.duplicateRows?` <span class="warn">· ${a.duplicateRows} duplicate row${a.duplicateRows===1?'':'s'}</span>`:'';
+    const missing=a.missingCrn?` <span class="warn">· ${a.missingCrn} missing CRN</span>`:'';
+    return `<div><b>${esc(c)}</b> — ${a.total} sections · ${a.uniqueCrns} unique CRNs${warning}${missing}</div>`;
+  }).join('');
+  const total=rows.length, unique=new Set(rows.map(sectionKey)).size;
+  el.innerHTML=`<b>Section check</b>${lines}<div style="margin-top:4px"><b>Total:</b> ${total} loaded · ${unique} unique${total!==unique?` <span class="warn">· ${total-unique} duplicates detected</span>`:''}</div>`;
+  el.style.display='block';
+}
+
 async function loadLiveCourses(){
   if(loading)return;
   if(!courses.length){alert('Add at least one course first.');return}
-  loading=true; liveReady=false; DATA=[]; selected=0;
+  loading=true; liveReady=false; DATA=[]; selected=0; if($('#sectionAudit')){$('#sectionAudit').style.display='none';$('#sectionAudit').innerHTML='';}
   const btn=$('#generateBtn'), term=$('#termSelect').value;
   btn.disabled=true; btn.textContent='Loading classes from UVU…';
   $('#loadStatus').textContent='';
@@ -630,6 +665,7 @@ async function loadLiveCourses(){
 
     if(failed){
       DATA=all;
+      renderSectionAudit(DATA);
       liveReady=false;
       const loadedCount=new Set(all.map(x=>x.course)).size;
       $('#loadStatus').textContent=loadedCount
@@ -640,6 +676,7 @@ async function loadLiveCourses(){
     }
 
     DATA=all; liveReady=true;
+    renderSectionAudit(DATA);
     trackEvent('classes_loaded',{courseCount:courses.length,sectionCount:DATA.length}); loadedTerm=term; loadedCourses=[...courses];
     $('#loadStatus').textContent=`✓ ${courses.length} course${courses.length===1?'':'s'} · ${DATA.length} sections loaded`;
     $('#dataStatus').textContent=`${term.toUpperCase()} · ${DATA.length} LIVE SECTIONS`;
